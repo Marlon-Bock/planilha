@@ -39,6 +39,15 @@ function deviceLabel() {
   return `${browser}${os ? ` no ${os}` : ""}${app}`;
 }
 
+/** A inscrição foi feita com esta chave pública do servidor? */
+function sameKey(sub: PushSubscription, publicKey: string) {
+  const current = sub.options?.applicationServerKey;
+  if (!current) return true; // navegador não informa: assume que sim
+  const a = new Uint8Array(current);
+  const b = urlBase64ToUint8Array(publicKey);
+  return a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
 async function currentRegistration() {
   if (!("serviceWorker" in navigator)) return undefined;
   return navigator.serviceWorker.getRegistration("/");
@@ -64,7 +73,17 @@ export function usePush() {
     if (Notification.permission === "denied") return setStatus("denied");
     const reg = await currentRegistration();
     if (!reg) return setStatus("no-sw");
-    const sub = await reg.pushManager.getSubscription();
+    let sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      // Se o servidor trocou as chaves VAPID, a inscrição antiga não funciona mais: refaz sozinho.
+      const info = await api.get<PushInfo>("/push").then((r) => r.data).catch(() => null);
+      if (info?.public_key && !sameKey(sub, info.public_key)) {
+        await sub.unsubscribe().catch(() => {});
+        sub = Notification.permission === "granted"
+          ? await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(info.public_key) }).catch(() => null)
+          : null;
+      }
+    }
     if (sub) {
       // Garante que a inscrição deste aparelho está ligada à conta logada agora.
       const json = sub.toJSON();
@@ -92,6 +111,9 @@ export function usePush() {
       if (!reg) return setStatus("no-sw");
       const { data } = await api.get<PushInfo>("/push");
       if (!data.public_key) throw new Error("O servidor ainda não tem as chaves de notificação configuradas.");
+      // Inscrição antiga com outra chave impede a nova: remove antes.
+      const old = await reg.pushManager.getSubscription();
+      if (old && !sameKey(old, data.public_key)) await old.unsubscribe().catch(() => {});
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(data.public_key) });
       const json = sub.toJSON();
       await api.post("/push/subscribe", { endpoint: json.endpoint, keys: json.keys, device: deviceLabel() });

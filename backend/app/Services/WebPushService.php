@@ -64,8 +64,11 @@ class WebPushService
                 if ($report->isSuccess()) {
                     $delivered++;
                     $sub?->forceFill(['last_used_at' => now()])->saveQuietly();
-                } elseif ($report->isSubscriptionExpired()) {
-                    $sub?->delete(); // celular desinstalou o app / revogou a permissão
+                } elseif ($report->isSubscriptionExpired() || in_array($report->getResponse()?->getStatusCode(), [400, 401, 403], true)) {
+                    // 404/410: celular desinstalou o app ou revogou a permissão.
+                    // 400/401/403: inscrição feita com outras chaves VAPID; o aparelho se inscreve de novo sozinho.
+                    $sub?->delete();
+                    logger()->info('Web Push: inscrição inválida removida', ['reason' => $report->getReason()]);
                 } else {
                     logger()->warning('Web Push falhou', ['reason' => $report->getReason()]);
                 }
