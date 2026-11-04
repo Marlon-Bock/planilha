@@ -82,7 +82,37 @@ no celular/PC, inclusive com o app fechado. Cada pessoa ativa em **Perfil → No
 cd backend && php artisan test   # usa SQLite em memória; não toca no banco real
 ```
 
-## Produção (resumo)
+## Produção (hospedagem com PHP, sem Node)
 
-- Backend: `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, `SANCTUM_STATEFUL_DOMAINS=seudominio.com`, `FRONTEND_URL=https://seudominio.com`
-- Frontend: `BACKEND_URL=https://api.seudominio.com`, depois `npm run build && npm start`
+O frontend é **exportado como arquivos estáticos** e servido pelo próprio Laravel, no mesmo domínio
+da API. O servidor só precisa de PHP 8.3+ e MySQL.
+
+```
+Navegador ──► https://seudominio.com
+                ├── /dashboard, /transacoes, ...  → backend/public/*.html  (Apache, via .htaccess)
+                ├── /_next/*, /icons/*, /sw.js     → arquivos estáticos
+                └── /api/*, /sanctum/*             → Laravel (index.php)
+```
+
+**Publicar uma nova versão**
+
+1. No PC: `cd frontend && npm run deploy` (gera o build e copia para `backend/public`).
+2. `git add -A && git commit -m "deploy" && git push`
+3. No servidor:
+   ```bash
+   cd ~/planilha && git pull
+   cd backend && ~/bin/composer install --no-dev --optimize-autoloader
+   php artisan migrate --force && php artisan config:cache && php artisan route:cache
+   ```
+
+**Primeira instalação no servidor**
+
+- Clonar o repositório **fora** da pasta pública (ex.: `~/planilha`).
+- `backend/.env` com `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`,
+  `SANCTUM_STATEFUL_DOMAINS=seudominio.com`, `FRONTEND_URL=https://seudominio.com`, dados do MySQL,
+  `php artisan key:generate` e `php artisan push:vapid`.
+- A **raiz do domínio** precisa apontar para `~/planilha/backend/public` (no cPanel, em Domínios → raiz do
+  documento, ou trocando a pasta do domínio por um link simbólico para ela).
+- Cron a cada minuto: `cd ~/planilha/backend && php artisan schedule:run >> /dev/null 2>&1`.
+
+Em desenvolvimento nada muda: `npm run dev` (frontend) + `php artisan serve` (backend).

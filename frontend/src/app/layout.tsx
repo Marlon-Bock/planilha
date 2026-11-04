@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   title: { default: "Planilha do Casal", template: "%s · Planilha do Casal" },
   description: "Controle financeiro pessoal: despesas, receitas, orçamentos, metas e relatórios.",
   applicationName: "Planilha do Casal",
+  // Manifesto do PWA (public/manifest.webmanifest): instalar no PC/celular e base do APK.
+  manifest: "/manifest.webmanifest",
   // iPhone/iPad: abre em tela cheia quando adicionado à tela de início.
   appleWebApp: { capable: true, title: "Planilha", statusBarStyle: "default" },
   icons: { apple: "/icons/apple-touch-icon.png" },

@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,87734,t=>{"use strict";var e=t.i(43476);t.s(["RetryButton",0,function(){return(0,e.jsx)("button",{onClick:()=>window.location.reload(),className:"h-10 rounded-lg bg-brand-600 px-5 text-sm font-medium text-white hover:bg-brand-700",children:"Tentar novamente"})}])}]);

@@ -1,9 +1,19 @@
+# A exportação do Next cria, para cada tela, um "dashboard.html" E uma pasta "dashboard/"
+# (dados de navegação). Sem isto, o Apache trataria /dashboard como pasta e redirecionaria
+# para /dashboard/. Com isto, a regra abaixo entrega o dashboard.html.
+<IfModule mod_dir.c>
+    DirectorySlash Off
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Nunca servir arquivos ocultos (.git, .env...), exceto .well-known (certificado e app Android).
+    RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -18,8 +28,44 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Telas do app (frontend exportado do Next.js): /dashboard -> dashboard.html.
+    # A API (/api, /sanctum) não tem .html correspondente e segue para o Laravel.
+    RewriteCond %{REQUEST_URI} !^/(api|sanctum)/
+    RewriteCond %{REQUEST_FILENAME}.html -f
+    RewriteRule ^(.+)$ $1.html [L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-Frame-Options "DENY"
+
+    # Páginas do app: sempre busca a versão nova (o JS delas muda a cada deploy).
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache, must-revalidate"
+    </FilesMatch>
+
+    # Service worker nunca pode ficar em cache, senão o app instalado não atualiza.
+    <Files "sw.js">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Service-Worker-Allowed "/"
+    </Files>
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    # Arquivos do build têm hash no nome: podem ficar em cache por 1 ano.
+    <If "%{REQUEST_URI} =~ m#^/_next/static/#">
+        ExpiresDefault "access plus 1 year"
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
 </IfModule>

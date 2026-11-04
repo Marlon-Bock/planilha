@@ -36,6 +36,12 @@ return [
         'subject' => env('VAPID_SUBJECT', 'mailto:contato@planilha.app'),
     ],
 
+    // App Android (TWA): ver rota /.well-known/assetlinks.json em routes/web.php.
+    'twa' => [
+        'package' => env('TWA_PACKAGE_NAME'),
+        'fingerprints' => env('TWA_SHA256_FINGERPRINTS'),
+    ],
+
     // Taxas usadas só se a API do Banco Central estiver fora do ar (% ao ano).
     'market' => [
         'cdi' => env('MARKET_CDI_FALLBACK', 13.65),
