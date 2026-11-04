@@ -10,7 +10,6 @@
     {{-- Página de erro do servidor: CSS embutido, funciona mesmo se o app não carregar. --}}
     <style>
         :root { --pink: #db2777; --pink-soft: #fdf2f8; --ink: #0f172a; --muted: #475569; --bg2: #f5f3ff; }
-        @media (prefers-color-scheme: dark) { :root { --pink-soft: #020617; --bg2: #1e1033; --ink: #f8fafc; --muted: #cbd5e1; } }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
                font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
