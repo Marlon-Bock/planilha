@@ -1,0 +1,11 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "br.dev.nextweb.natemarlon.twa",
+    "sha256_cert_fingerprints": [
+      "89:B3:54:0F:1F:C8:F7:48:CF:2F:E2:81:73:9E:9A:98:D3:76:4B:CB:B2:FB:10:9A:8A:1D:9B:A1:0C:B4:2F:92",
+      "A6:BA:11:3D:27:48:60:C2:A5:54:C3:E0:75:1C:7B:D1:AE:E0:95:84:DF:44:2C:D9:56:20:A4:D0:91:0A:EF:FD"
+    ]
+  }
+}]
