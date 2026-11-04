@@ -14,33 +14,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Sistema de uso privado: não existe cadastro público. Novas contas só são criadas
+ * por um administrador (tela Usuários → Novo usuário).
+ */
 class AuthController extends Controller
 {
-    public function register(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:180', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
-        ]);
-
-        $user = DB::transaction(function () use ($data) {
-            // O primeiro usuário do sistema vira administrador.
-            $role = User::query()->exists() ? User::ROLE_USER : User::ROLE_ADMIN;
-            $user = User::create([...$data, 'role' => $role, 'last_login_at' => now()]);
-            self::bootstrapUser($user);
-
-            return $user;
-        });
-
-        Auth::guard('web')->login($user);
-        if ($request->hasSession()) {
-            $request->session()->regenerate();
-        }
-
-        return response()->json(['user' => $user], 201);
-    }
-
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([

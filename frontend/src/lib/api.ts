@@ -37,7 +37,7 @@ api.interceptors.response.use(
     }
     if (error.response?.status === 401 && typeof window !== "undefined") {
       const path = window.location.pathname;
-      if (!["/login", "/cadastro"].includes(path)) {
+      if (path !== "/login") {
         rememberNext(path);
         // Fora de componentes React (interceptor do axios) não há router disponível.
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination

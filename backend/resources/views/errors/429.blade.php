@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '429')
+@section('title', 'Calma, muitas tentativas')
+@section('message', 'Foram muitas tentativas em pouco tempo. Respire, espere um minutinho e tente de novo.')
+@section('retry', '1')

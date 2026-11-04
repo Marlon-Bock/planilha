@@ -57,6 +57,41 @@ const badge = `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" vi
 await sharp(Buffer.from(badge)).resize(72, 72).png().toFile("public/icons/badge-72.png");
 console.log("✓ public/icons/badge-72.png");
 
-// Favicon vetorial (Next serve src/app/icon.svg automaticamente).
-await writeFile("src/app/icon.svg", any);
-console.log("✓ src/app/icon.svg");
+// Favicon (aba do navegador): em 16–32px a carteira fica ilegível, então é só um
+// coração branco no quadrado rosa — reconhecível em qualquer tamanho.
+const favicon = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${BRAND_FROM}"/>
+      <stop offset="1" stop-color="${BRAND_TO}"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <path transform="translate(12 11) scale(1.67)" fill="#fff" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 5.3 3 1.7-1.8 3.2-3 5.3-3 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/>
+</svg>`;
+await writeFile("public/icon.svg", favicon);
+console.log("✓ public/icon.svg");
+
+// favicon.ico com PNGs de 16, 32 e 48px dentro (formato aceito por todos os navegadores).
+const sizes = [16, 32, 48];
+const pngs = await Promise.all(sizes.map((s) => sharp(Buffer.from(favicon)).resize(s, s).png().toBuffer()));
+const header = Buffer.alloc(6);
+header.writeUInt16LE(0, 0); // reservado
+header.writeUInt16LE(1, 2); // tipo: ícone
+header.writeUInt16LE(sizes.length, 4);
+let offset = 6 + 16 * sizes.length;
+const entries = sizes.map((s, i) => {
+  const e = Buffer.alloc(16);
+  e.writeUInt8(s, 0); // largura
+  e.writeUInt8(s, 1); // altura
+  e.writeUInt8(0, 2); // paleta
+  e.writeUInt8(0, 3); // reservado
+  e.writeUInt16LE(1, 4); // planos
+  e.writeUInt16LE(32, 6); // bits por pixel
+  e.writeUInt32LE(pngs[i].length, 8);
+  e.writeUInt32LE(offset, 12);
+  offset += pngs[i].length;
+  return e;
+});
+await writeFile("public/favicon.ico", Buffer.concat([header, ...entries, ...pngs]));
+console.log("✓ public/favicon.ico (16, 32, 48px)");

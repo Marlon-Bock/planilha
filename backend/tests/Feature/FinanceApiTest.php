@@ -32,16 +32,25 @@ class FinanceApiTest extends TestCase
         return Category::withoutGlobalScopes()->where('user_id', $user->id)->where('type', $type)->first();
     }
 
-    public function test_register_creates_default_structure_and_first_user_is_admin(): void
+    public function test_public_registration_is_closed(): void
     {
+        // Sistema privado: ninguém cria conta sozinho.
         $res = $this->postJson('/api/auth/register', [
-            'name' => 'Marlon', 'email' => 'm@example.com', 'password' => 'senha1234', 'password_confirmation' => 'senha1234',
-        ])->assertCreated();
+            'name' => 'Intruso', 'email' => 'x@example.com', 'password' => 'senha1234', 'password_confirmation' => 'senha1234',
+        ]);
+        $this->assertContains($res->status(), [404, 405]); // a rota não existe
+        $this->assertSame(0, User::count());
+    }
 
-        $this->assertSame('admin', $res->json('user.role'));
-        $user = User::first();
-        $this->assertSame(16, Category::withoutGlobalScopes()->where('user_id', $user->id)->count());
-        $this->assertSame(1, Account::withoutGlobalScopes()->where('user_id', $user->id)->count());
+    public function test_admin_creates_users_with_default_structure(): void
+    {
+        $admin = $this->makeUser(['role' => 'admin']);
+        $id = $this->actingAs($admin)->postJson('/api/admin/users', [
+            'name' => 'Natália', 'email' => 'n@example.com', 'password' => 'senha1234', 'role' => 'user',
+        ])->assertCreated()->json('data.id');
+
+        $this->assertSame(16, Category::withoutGlobalScopes()->where('user_id', $id)->count());
+        $this->assertSame(1, Account::withoutGlobalScopes()->where('user_id', $id)->count());
     }
 
     public function test_users_cannot_see_each_others_data(): void

@@ -11,7 +11,7 @@ const target = join(root, "..", "backend", "public");
 const manifestFile = join(target, ".frontend-build.json");
 
 // Arquivos do Laravel que o deploy nunca pode sobrescrever/apagar.
-const PROTECTED = new Set(["index.php", ".htaccess", "robots.txt", "favicon.ico", ".frontend-build.json"]);
+const PROTECTED = new Set(["index.php", ".htaccess", "robots.txt", ".frontend-build.json"]);
 // "/" é tratado pelo Laravel (redireciona para /dashboard).
 const SKIP = new Set(["index.html"]);
 

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { parseError, type FieldErrors } from "@/lib/api";
@@ -57,9 +56,7 @@ export default function LoginPage() {
         <Checkbox checked={remember} onChange={setRemember} label="Manter conectado" />
         <Button type="submit" className="w-full" loading={loading}>Entrar</Button>
       </form>
-      <p className="mt-6 text-center text-sm text-slate-500">
-        Não tem conta? <Link href="/cadastro" className="font-medium text-brand-600 hover:underline">Criar conta grátis</Link>
-      </p>
+      <p className="mt-6 text-center text-xs text-slate-400">Acesso restrito 💕</p>
     </>
   );
 }

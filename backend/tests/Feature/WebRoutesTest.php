@@ -28,6 +28,16 @@ class WebRoutesTest extends TestCase
         $this->getJson('/api/nao-existe')->assertNotFound()->assertJsonStructure(['message']);
     }
 
+    public function test_error_pages_render_in_portuguese(): void
+    {
+        $pages = [500 => 'Algo deu errado', 503 => 'Voltamos já', 429 => 'muitas tentativas', 419 => 'sessão expirou', 403 => 'Acesso não permitido', 404 => 'se perdeu'];
+        foreach ($pages as $code => $text) {
+            $html = view("errors.{$code}")->render();
+            $this->assertStringContainsString($text, $html, "errors.{$code}");
+            $this->assertStringContainsString('aria-label="'.$code.'"', $html);
+        }
+    }
+
     public function test_assetlinks_for_android_app(): void
     {
         config(['services.twa.package' => null]);

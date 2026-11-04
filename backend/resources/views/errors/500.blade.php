@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '500')
+@section('title', 'Algo deu errado por aqui')
+@section('message', 'O servidor tropeçou ao responder. Seus dados estão seguros: nada foi perdido. Tente de novo em instantes.')
+@section('retry', '1')

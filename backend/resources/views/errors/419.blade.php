@@ -1,0 +1,5 @@
+@extends('errors.layout')
+@section('code', '419')
+@section('title', 'Sua sessão expirou')
+@section('message', 'Por segurança, a página ficou parada tempo demais. Recarregue e tente de novo.')
+@section('retry', '1')

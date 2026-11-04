@@ -14,7 +14,14 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   // iPhone/iPad: abre em tela cheia quando adicionado à tela de início.
   appleWebApp: { capable: true, title: "Planilha", statusBarStyle: "default" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
+  // Favicon: .ico (todos os navegadores) + SVG (nítido em telas de alta resolução).
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icons/apple-touch-icon.png",
+  },
   formatDetection: { telephone: false },
 };
 
