@@ -11,7 +11,7 @@ import { cn, fmtDate, INVESTMENT_TYPES, money, parseAmount, percent, RATE_TYPES,
 import { useInvalidateFinance } from "@/lib/queries";
 import type { Investment, InvestmentMovement, InvestmentSummary, MarketRates } from "@/lib/types";
 import {
-  Badge, Button, Card, ColorPicker, ConfirmDialog, cuteHover, DatePicker, EmptyState, Field, Input, Modal, MoneyInput, PageHeader, Pagination, Select, Skeleton, Textarea, Toggle,
+  Badge, Button, Card, Carousel, ColorPicker, ConfirmDialog, cuteHover, DatePicker, EmptyState, Field, Input, Modal, MoneyInput, PageHeader, Pagination, Select, Skeleton, Textarea, Toggle,
 } from "@/components/ui";
 import { InvestmentEvolutionChart, MonthlyYieldChart } from "@/components/charts";
 
@@ -93,7 +93,7 @@ export default function InvestmentsPage() {
         </Card>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Carousel className="sm:grid-cols-2 xl:grid-cols-4">
             <Kpi icon={Landmark} label="Total investido hoje" value={money(s.balance)} sub={`Vocês colocaram ${money(s.invested)}`} />
             <Kpi icon={TrendingUp} label="Rendimento total" value={money(s.yield, { sign: true })} tone={s.yield >= 0 ? "pos" : "neg"}
               sub={s.yield_percent !== null ? `${percent(s.yield_percent, 2)} sobre o investido` : undefined} />
@@ -101,7 +101,7 @@ export default function InvestmentsPage() {
               sub={s.projected_month_yield ? `Próximos 30 dias: ~${money(s.projected_month_yield)}` : undefined} />
             <Kpi icon={CalendarClock} label="Rende por dia útil" value={s.daily_yield ? `~${money(s.daily_yield)}` : "—"}
               sub={s.daily_yield ? "Estimativa com o CDI de hoje" : "Sem taxa para estimar"} />
-          </div>
+          </Carousel>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-3">
             <Card title="Evolução do patrimônio investido" className="xl:col-span-2"><InvestmentEvolutionChart data={data.evolution} /></Card>
@@ -522,7 +522,26 @@ function Statement({ investments }: { investments: Investment[] }) {
         {isLoading ? <div className="p-4"><Skeleton className="h-48" /></div> : !data?.data.length ? (
           <EmptyState icon={<History className="h-6 w-6" />} title="Nenhuma movimentação no filtro" />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <ul className="divide-y divide-slate-100 md:hidden dark:divide-slate-800">
+            {data.data.map((m) => (
+              <li key={m.id} className="flex items-center gap-3 px-4 py-3">
+                <span className="h-9 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: m.investment.color }} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-medium text-slate-900 dark:text-white">{m.investment.name}</p>
+                  <p className="truncate text-xs text-slate-500">
+                    {fmtDate(m.date)} · {MOVE_LABEL[m.type].label}{m.is_opening ? " (cadastro)" : ""}{m.account ? ` · ${m.account.name}` : ""}
+                  </p>
+                  {m.note && <p className="truncate text-xs text-slate-400">{m.note}</p>}
+                </div>
+                <span className={cn("tabular shrink-0 text-[15px] font-semibold",
+                  m.type === "withdraw" ? "text-rose-600" : m.type === "deposit" ? "text-violet-600 dark:text-violet-400" : "text-slate-700 dark:text-slate-200")}>
+                  {m.type === "withdraw" ? "−" : m.type === "deposit" ? "+" : ""}{money(m.amount)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[720px] text-sm">
               <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500 uppercase dark:bg-slate-800/50">
                 <tr>
@@ -556,6 +575,7 @@ function Statement({ investments }: { investments: Investment[] }) {
               </tbody>
             </table>
           </div>
+          </>
         )}
         {data && <Pagination page={data.meta.current_page} lastPage={data.meta.last_page} onChange={setPage} />}
       </Card>

@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 import { cn, currentMonth, fmtDate, money, monthLabel, percent, rateLabel } from "@/lib/format";
 import { useInvalidateFinance } from "@/lib/queries";
 import type { Budget, CategorySlice, EvolutionPoint, Goal, Investment, InvestmentSummary, Transaction } from "@/lib/types";
-import { Card, cuteHover, Dot, EmptyState, MonthPicker, PageHeader, Progress, Skeleton } from "@/components/ui";
+import { Card, Carousel, cuteHover, Dot, EmptyState, MonthPicker, PageHeader, Progress, Skeleton } from "@/components/ui";
 import { CoupleGreeting } from "@/components/couple-greeting";
 import { burstFrom } from "@/components/cute";
 import { StatusBadge } from "@/components/status-badge";
@@ -77,7 +77,7 @@ export default function DashboardPage() {
         </TxLink>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Carousel className="sm:grid-cols-2 xl:grid-cols-4">
         {isLoading || !s ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32" />) : (
           <>
             <StatCard icon={Landmark} tone="brand" label="Saldo em contas" value={money(s.total_balance)} sub={`Previsto: ${money(s.projected_balance)}`} />
@@ -86,7 +86,7 @@ export default function DashboardPage() {
             <StatCard icon={Scale} tone={s.balance >= 0 ? "income" : "expense"} label="Resultado do mês" value={money(s.balance)} sub={s.savings_rate !== null ? `Taxa de economia: ${percent(s.savings_rate)}` : "Sem receitas no mês"} />
           </>
         )}
-      </div>
+      </Carousel>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
         <Card title="Receitas x despesas (12 meses)" className="xl:col-span-2">
@@ -248,7 +248,7 @@ function InvestmentsCard({ inv, accountsTotal }: { inv: DashboardData["investmen
         <Link href="/investimentos" className="text-sm text-brand-600 hover:underline">Ver detalhes</Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Carousel className="sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={Landmark} tone="invest" label="Total investido hoje" value={money(s.balance)}
           sub={`Vocês colocaram ${money(s.invested)}`} />
         <StatCard icon={TrendingUp} tone={s.yield >= 0 ? "income" : "expense"} label="Rendimento total" value={money(s.yield, { sign: true })}
@@ -257,7 +257,7 @@ function InvestmentsCard({ inv, accountsTotal }: { inv: DashboardData["investmen
           valueClass={pos(s.month_yield)} sub={s.daily_yield > 0 ? `~${money(s.daily_yield)} por dia útil · próx. 30 dias ~${money(s.projected_month_yield)}` : undefined} />
         <StatCard icon={PiggyBank} tone="brand" label="Patrimônio total" value={money(patrimony)}
           sub={`${percent(patrimony > 0 ? (s.balance / patrimony) * 100 : 0, 0)} investido · contas ${money(accountsTotal)}`} />
-      </div>
+      </Carousel>
 
       {/* Sem investimentos ainda: os quadrinhos ficam zerados e aparece o convite. */}
       {!s.count ? (

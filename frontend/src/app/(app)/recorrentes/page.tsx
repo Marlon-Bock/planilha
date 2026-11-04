@@ -8,7 +8,7 @@ import { api, parseError, type FieldErrors } from "@/lib/api";
 import { cn, fmtDate, FREQUENCIES, money, parseAmount, PAYMENT_METHODS, today } from "@/lib/format";
 import { useAccounts, useCategories, useInvalidateFinance } from "@/lib/queries";
 import type { Recurring } from "@/lib/types";
-import { Badge, Button, Card, ConfirmDialog, DatePicker, Dot, EmptyState, Field, Input, Modal, MoneyInput, PageHeader, Select, Skeleton, Textarea, Toggle } from "@/components/ui";
+import { Badge, Button, Card, Carousel, ConfirmDialog, DatePicker, Dot, EmptyState, Field, Input, Modal, MoneyInput, PageHeader, Select, Skeleton, Textarea, Toggle } from "@/components/ui";
 import { CategoryIcon } from "@/components/icons";
 
 export default function RecurringPage() {
@@ -46,11 +46,11 @@ export default function RecurringPage() {
         </>} />
 
       {s && (
-        <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <Carousel className="mb-6 sm:grid-cols-3">
           <Box label="Receitas fixas / mês" value={s.monthly_income} tone="text-teal-600 dark:text-teal-400" />
           <Box label="Despesas fixas / mês" value={s.monthly_expense} tone="text-rose-600 dark:text-rose-400" />
           <Box label="Sobra após contas fixas" value={s.monthly_income - s.monthly_expense} />
-        </div>
+        </Carousel>
       )}
 
       <Card padded={false}>
@@ -58,7 +58,31 @@ export default function RecurringPage() {
           <EmptyState icon={<Repeat className="h-6 w-6" />} title="Nenhuma recorrência" description="Cadastre suas contas fixas e o sistema cria os lançamentos todo mês automaticamente."
             action={<Button onClick={() => setOpen(true)}>Criar recorrência</Button>} />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Celular: lista (toque para editar). */}
+          <ul className="divide-y divide-slate-100 md:hidden dark:divide-slate-800">
+            {data.data.map((r) => (
+              <li key={r.id} className={cn("flex items-center pr-2", !r.is_active && "opacity-50")}>
+                <button type="button" onClick={() => { setEditing(r); setOpen(true); }} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left active:bg-slate-50 dark:active:bg-slate-800">
+                  <CategoryIcon icon={r.category?.icon} color={r.category?.color} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-medium text-slate-900 dark:text-white">{r.description}</span>
+                    <span className="block truncate text-xs text-slate-500">
+                      {FREQUENCIES[r.frequency]} · {r.account?.name} · {r.is_active ? `próxima ${fmtDate(r.next_date, "dd/MM")}` : "inativa"}
+                    </span>
+                  </span>
+                  <span className={cn("tabular shrink-0 text-[15px] font-semibold", r.type === "income" ? "text-teal-600 dark:text-teal-400" : "text-slate-900 dark:text-white")}>
+                    {r.type === "income" ? "+" : "−"}{money(r.amount)}
+                  </span>
+                </button>
+                <button type="button" onClick={() => setToDelete(r)} aria-label={`Excluir ${r.description}`}
+                  className="ml-1 rounded-lg p-2.5 text-slate-300 active:bg-rose-50 active:text-rose-600 dark:text-slate-600">
+                  <Trash2 className="h-4.5 w-4.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[720px] text-sm">
               <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500 uppercase dark:bg-slate-800/50">
                 <tr><th className="px-5 py-3">Descrição</th><th className="px-3 py-3">Frequência</th><th className="px-3 py-3">Conta</th><th className="px-3 py-3">Próxima</th><th className="px-3 py-3 text-right">Valor</th><th className="w-20" /></tr>
@@ -92,6 +116,7 @@ export default function RecurringPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Card>
 

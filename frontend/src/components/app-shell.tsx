@@ -6,8 +6,8 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import {
-  ArrowLeftRight, Bell, ChartLine, ChevronsUpDown, ShieldCheck, ChartColumn, LayoutDashboard, LogOut, Menu, Moon, PiggyBank, Plus, Repeat, Sun, Tags,
-  Target, UserCog, Users, Wallet, X, type LucideIcon,
+  ArrowLeftRight, Bell, ChartLine, ChevronsUpDown, ShieldCheck, ChartColumn, LayoutDashboard, LogOut, Moon, PiggyBank, Plus, Repeat, Sun, Tags,
+  Target, UserCog, Users, Wallet, type LucideIcon,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn, fmtDate, isInvestmentTx } from "@/lib/format";
@@ -20,6 +20,8 @@ import { Spinner } from "@/components/ui";
 import { PopoverPanel, usePopover } from "@/components/controls";
 import { InstallButton } from "@/components/pwa";
 import { burstFrom, Cat, Heart } from "@/components/cute";
+import { BottomNav, MoreSheet } from "@/components/mobile-nav";
+import { PrivacyToggle } from "@/components/privacy";
 
 const firstName = (n: string) => n.trim().split(/\s+/)[0];
 
@@ -49,7 +51,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const closeMore = useCallback(() => setMoreOpen(false), []);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [defaults, setDefaults] = useState<TxDefaults | undefined>();
@@ -60,13 +63,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       router.replace("/login");
     }
   }, [loading, user, router, pathname]);
-
-  // Fecha o menu mobile ao navegar.
-  const [lastPath, setLastPath] = useState(pathname);
-  if (lastPath !== pathname) {
-    setLastPath(pathname);
-    setMobileOpen(false);
-  }
 
   const openNew = useCallback((d?: TxDefaults) => {
     setEditing(null);
@@ -139,31 +135,42 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-h-screen lg:pl-64">
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-slate-200 bg-white lg:block dark:border-slate-800 dark:bg-slate-900">{sidebar}</aside>
 
-        {mobileOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="absolute inset-0 bg-slate-950/50" onClick={() => setMobileOpen(false)} />
-            <aside className="absolute inset-y-0 left-0 w-72 bg-white shadow-xl dark:bg-slate-900">
-              <button className="absolute top-5 right-3 rounded-lg p-1 text-slate-400" onClick={() => setMobileOpen(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></button>
-              {sidebar}
-            </aside>
+        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 pt-[env(safe-area-inset-top)] backdrop-blur-lg dark:border-slate-800 dark:bg-slate-950/85">
+          <div className="flex h-14 items-center gap-1 px-3 sm:px-6 lg:h-16 lg:gap-3">
+            {/* Celular: marca do app à esquerda (a navegação fica na barra de baixo). */}
+            <Link href="/dashboard" className="flex min-w-0 items-center gap-2 lg:hidden">
+              <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm shadow-brand-500/30">
+                <Wallet className="h-4 w-4" />
+                <Heart className="absolute -top-1 -right-1 h-3.5 w-3.5 text-brand-500 drop-shadow-[0_0_2px_white] dark:drop-shadow-[0_0_2px_#0f172a]" />
+              </span>
+              <span className="truncate text-base font-bold tracking-tight text-slate-900 dark:text-white">
+                {user.partner_name ? `${firstName(user.name)} & ${firstName(user.partner_name)}` : "Planilha"}
+              </span>
+            </Link>
+            <div className="flex-1" />
+            <InstallButton variant="ghost" className="hidden px-3 lg:inline-flex" />
+            <PrivacyToggle />
+            <span className="hidden lg:contents"><ThemeToggle /></span>
+            <NotificationBell />
+            <button onClick={() => openNew()} className="hidden h-10 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-brand-700 lg:inline-flex">
+              <Plus className="h-4 w-4" /> Novo lançamento
+            </button>
           </div>
-        )}
-
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/80 px-4 backdrop-blur sm:px-6 dark:border-slate-800 dark:bg-slate-950/80">
-          <button className="rounded-lg p-2 text-slate-600 lg:hidden dark:text-slate-300" onClick={() => setMobileOpen(true)} aria-label="Abrir menu">
-            <Menu className="h-5 w-5" />
-          </button>
-          <div className="flex-1" />
-          <InstallButton variant="ghost" className="px-3" />
-          <ThemeToggle />
-          <NotificationBell />
-          <button onClick={() => openNew()} className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-600 px-3 text-sm font-medium text-white shadow-sm hover:bg-brand-700 sm:px-4">
-            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo lançamento</span>
-          </button>
         </header>
 
-        <main className="w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+        {/* Espaço embaixo para a barra de navegação do celular. */}
+        <main className="w-full px-4 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:py-8">
+          <div key={pathname} className="animate-[page-in_.25s_ease-out]">{children}</div>
+        </main>
       </div>
+
+      <BottomNav onNew={() => openNew()} onMore={() => setMoreOpen(true)}
+        moreActive={moreOpen || !["/dashboard", "/transacoes", "/investimentos"].some((h) => pathname.startsWith(h))} />
+      <MoreSheet open={moreOpen} onClose={closeMore} user={user} onLogout={logout}
+        items={[
+          ...items.filter((i) => !["/dashboard", "/transacoes", "/investimentos"].includes(i.href)),
+          { href: "/perfil", label: "Meu perfil", icon: UserCog },
+        ]} />
       <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} transaction={editing} defaults={defaults} />
     </TxFormContext.Provider>
   );

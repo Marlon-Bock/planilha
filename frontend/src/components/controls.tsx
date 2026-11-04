@@ -21,7 +21,7 @@ import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Minus, Plu
 import { cn } from "@/lib/format";
 
 const triggerBase =
-  "flex h-10 w-full min-w-0 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-left text-sm text-slate-900 transition hover:border-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600";
+  "flex h-10 w-full min-w-0 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-left text-base sm:text-sm text-slate-900 transition hover:border-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600";
 const panelBase =
   "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40";
 const openRing = "border-brand-500 ring-2 ring-brand-500/20 dark:border-brand-500";
@@ -76,12 +76,26 @@ export function usePopover<T extends HTMLElement>(opts: { matchWidth?: boolean }
   return { open, setOpen, close, anchorRef, panelRef, place };
 }
 
+/**
+ * Painel flutuante. No celular (< 640px) vira uma folha que sobe de baixo, como nos apps:
+ * as classes `max-sm:!...` vencem o posicionamento calculado (estilo inline).
+ */
 export function PopoverPanel({ panelRef, children, className }: { panelRef: RefObject<HTMLDivElement | null>; children: ReactNode; className?: string }) {
   return createPortal(
-    <div ref={panelRef} style={{ position: "fixed", top: 0, left: 0, visibility: "hidden", zIndex: 70 }}
-      className={cn(panelBase, "animate-[pop_120ms_ease-out]", className)}>
-      {children}
-    </div>,
+    <>
+      {/* Fundo escurecido só no celular; tocar nele fecha (é "fora" do painel). */}
+      <div className="fixed inset-0 z-[69] animate-[fade-in_.2s_ease-out] bg-slate-950/40 sm:hidden" aria-hidden />
+      <div ref={panelRef} style={{ position: "fixed", top: 0, left: 0, visibility: "hidden", zIndex: 70 }}
+        className={cn(
+          panelBase, "animate-[pop_120ms_ease-out]", className,
+          "max-sm:!top-auto max-sm:!right-0 max-sm:!bottom-0 max-sm:!left-0 max-sm:!w-full max-sm:!max-w-none max-sm:!min-w-0",
+          "max-sm:max-h-[80vh] max-sm:overflow-y-auto max-sm:rounded-b-none max-sm:rounded-t-3xl max-sm:border-x-0 max-sm:border-b-0",
+          "max-sm:animate-[sheet-up_.25s_cubic-bezier(.2,.8,.2,1)] max-sm:pb-[env(safe-area-inset-bottom)] max-sm:[&>*]:mx-auto",
+        )}>
+        <div className="mx-auto mt-2.5 mb-1 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden dark:bg-slate-700" aria-hidden />
+        {children}
+      </div>
+    </>,
     document.body,
   );
 }
@@ -164,7 +178,9 @@ export function Select({ value, onChange, children, className, invalid, disabled
   // Foco inicial e rolagem até o item ativo.
   useEffect(() => {
     if (!open) return;
-    (showSearch ? searchRef.current : listRef.current)?.focus({ preventScroll: true });
+    // No celular não foca a busca: o teclado subiria cobrindo a lista (toque na busca para digitar).
+    const mobile = window.matchMedia("(max-width: 639px)").matches;
+    (showSearch && !mobile ? searchRef.current : listRef.current)?.focus({ preventScroll: true });
   }, [open, showSearch]);
   useEffect(() => {
     if (open) listRef.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.scrollIntoView({ block: "nearest" });
@@ -569,7 +585,7 @@ export function MoneyInput({ value, onChange, allowNegative, invalid, className,
         toEnd();
       }}
       className={cn(
-        "tabular h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100",
+        "tabular h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100",
         num !== null && num < 0 && "text-rose-600 dark:text-rose-400",
         invalid && "border-rose-500",
         className,

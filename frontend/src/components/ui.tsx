@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import { Children, forwardRef, Fragment, isValidElement, useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, LoaderCircle, X } from "lucide-react";
 import { cn } from "@/lib/format";
@@ -44,7 +44,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLBut
 /* --------------------------------- Campos ---------------------------------- */
 
 const fieldBase =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }>(function Input({ className, invalid, ...props }, ref) {
   return <input ref={ref} className={cn(fieldBase, "h-10", invalid && "border-rose-500", className)} {...props} />;
@@ -103,12 +103,34 @@ export function Card({ className, children, title, action, padded = true }: { cl
 
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{title}</h1>
+        <h1 className="text-[1.6rem] leading-tight font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-white">{title}</h1>
         {description && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {/* No celular as ações rolam de lado numa linha (sem quebrar em várias linhas). */}
+      {actions && <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&>*]:shrink-0">{actions}</div>}
+    </div>
+  );
+}
+
+/** Achata arrays e fragmentos (<>...</>) para cada cartão virar um item do carrossel. */
+function flattenChildren(nodes: ReactNode): ReactNode[] {
+  return Children.toArray(nodes).flatMap((n) =>
+    isValidElement<{ children?: ReactNode }>(n) && n.type === Fragment ? flattenChildren(n.props.children) : [n],
+  );
+}
+
+/**
+ * Carrossel de cartões no celular (deslizar de lado, com "encaixe"), grade a partir de 640px.
+ * Use `className` para as colunas da grade (ex.: "sm:grid-cols-2 xl:grid-cols-4").
+ */
+export function Carousel({ children, className, itemClassName }: { children: ReactNode; className?: string; itemClassName?: string }) {
+  return (
+    <div className={cn("no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-1 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0", className)}>
+      {flattenChildren(children).map((child, i) => (
+        <div key={isValidElement(child) && child.key != null ? child.key : i} className={cn("w-[78%] shrink-0 snap-start sm:w-auto", itemClassName)}>{child}</div>
+      ))}
     </div>
   );
 }
@@ -188,25 +210,32 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: {
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 animate-[fade-in_.2s_ease-out] bg-slate-950/50 backdrop-blur-sm" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl dark:bg-slate-900",
+          // Celular: folha que sobe de baixo (como nos apps); computador: janela central.
+          "relative flex max-h-[92vh] w-full flex-col rounded-t-3xl bg-white shadow-xl sm:rounded-2xl dark:bg-slate-900",
+          "max-sm:animate-[sheet-up_.28s_cubic-bezier(.2,.8,.2,1)] sm:animate-[pop_150ms_ease-out]",
           size === "sm" && "sm:max-w-md",
           size === "md" && "sm:max-w-xl",
           size === "lg" && "sm:max-w-3xl",
         )}
       >
-        <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+        <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden dark:bg-slate-700" aria-hidden />
+        <header className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 sm:py-4 dark:border-slate-800">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
           <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800" aria-label="Fechar">
             <X className="h-5 w-5" />
           </button>
         </header>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <footer className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3 dark:border-slate-800">{footer}</footer>}
+        {footer && (
+          <footer className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] max-sm:[&>*]:h-11 max-sm:[&>*]:flex-1 sm:pb-3 dark:border-slate-800">
+            {footer}
+          </footer>
+        )}
       </div>
     </div>,
     document.body,

@@ -49,7 +49,7 @@ export default function BudgetsPage() {
 
       {s && s.budgeted > 0 && (
         <Card className="mb-6">
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Metric label="Orçado" value={money(s.budgeted)} />
             <Metric label="Gasto" value={money(s.spent)} />
             <Metric label="Disponível" value={money(s.remaining)} tone={s.remaining < 0 ? "text-rose-600" : "text-teal-600 dark:text-teal-400"} />

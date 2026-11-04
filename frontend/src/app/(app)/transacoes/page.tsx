@@ -14,6 +14,7 @@ import { CategoryIcon } from "@/components/icons";
 import { StatusBadge } from "@/components/status-badge";
 import { useTxForm } from "@/components/app-shell";
 import { burstFrom } from "@/components/cute";
+import { MobileStatement, TxActionSheet } from "@/components/mobile-statement";
 
 interface Filters {
   period: "month" | "range" | "all";
@@ -70,6 +71,8 @@ export default function TransactionsPage() {
   const [bulkDelete, setBulkDelete] = useState(false);
   const [bulkCategory, setBulkCategory] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Celular: lançamento tocado no extrato (abre a folha de ações).
+  const [sheetTx, setSheetTx] = useState<Transaction | null>(null);
 
   // Qualquer mudança de filtro volta para a página 1 e limpa a seleção.
   const setFilters = (next: Filters | ((f: Filters) => Filters)) => {
@@ -172,7 +175,8 @@ export default function TransactionsPage() {
           <a href={exportUrl} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
             <Download className="h-4 w-4" /> Exportar CSV
           </a>
-          <Button onClick={() => openNew()}>Novo lançamento</Button>
+          {/* No celular o "+" da barra de baixo faz isso. */}
+          <Button onClick={() => openNew()} className="hidden lg:inline-flex">Novo lançamento</Button>
         </>} />
 
       {/* Barra de filtros */}
@@ -259,14 +263,18 @@ export default function TransactionsPage() {
       )}
 
       {/* Tabela */}
-      <Card padded={false} className={cn("overflow-hidden transition-opacity", isFetching && "opacity-70")}>
+      {/* Celular: extrato de ponta a ponta (sem "overflow-hidden", senão o título do dia não gruda no topo). */}
+      <Card padded={false} className={cn("transition-opacity md:overflow-hidden max-md:-mx-4 max-md:rounded-none max-md:border-x-0 max-md:shadow-none", isFetching && "opacity-70")}>
         {isLoading ? (
           <div className="space-y-2 p-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
         ) : rows.length === 0 ? (
           <EmptyState icon={<Search className="h-6 w-6" />} title="Nenhum lançamento encontrado" description="Ajuste os filtros ou adicione um novo lançamento."
             action={<Button onClick={() => openNew()}>Novo lançamento</Button>} />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Celular: extrato agrupado por dia, como nos apps de banco. */}
+          <MobileStatement rows={rows} onOpen={setSheetTx} onTogglePaid={togglePaid} />
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[860px] text-sm">
               <thead className="bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase dark:bg-slate-800/50">
                 <tr>
@@ -332,9 +340,16 @@ export default function TransactionsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
         {data && <Pagination page={data.meta.current_page} lastPage={data.meta.last_page} onChange={setPage} />}
       </Card>
+
+      <TxActionSheet tx={sheetTx} onClose={() => setSheetTx(null)}
+        onEdit={(t) => { setSheetTx(null); openEdit(t); }}
+        onTogglePaid={(t, e) => { setSheetTx(null); togglePaid(t, e); }}
+        onDuplicate={(t) => { setSheetTx(null); duplicate(t); }}
+        onDelete={(t) => { setSheetTx(null); setDeleteScope("this"); setToDelete(t); }} />
 
       <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={confirmDelete} loading={busy} title="Excluir lançamento" confirmLabel="Excluir"
         message={<>Excluir <strong>{toDelete?.description}</strong> ({money(toDelete?.amount)})? Essa ação não pode ser desfeita.

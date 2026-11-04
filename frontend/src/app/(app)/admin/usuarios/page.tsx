@@ -59,7 +59,7 @@ export default function AdminUsersPage() {
         actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Novo usuário</Button>} />
 
       {s && (
-        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {[["Usuários", s.users], ["Ativos", s.active], ["Admins", s.admins], ["Novos no mês", s.new_this_month], ["Acessaram (7 dias)", s.active_last_7_days], ["Lançamentos", s.transactions]].map(([l, v]) => (
             <div key={l} className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
               <p className="text-xs text-slate-500">{l}</p><p className="tabular text-xl font-bold text-slate-900 dark:text-white">{v}</p>
@@ -69,7 +69,7 @@ export default function AdminUsersPage() {
       )}
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <div className="relative min-w-60 flex-1">
+        <div className="relative min-w-0 flex-1 basis-60">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" className="pl-9" />
         </div>
@@ -80,7 +80,33 @@ export default function AdminUsersPage() {
 
       <Card padded={false}>
         {isLoading ? <div className="p-4"><Skeleton className="h-60" /></div> : (
-          <div className="overflow-x-auto">
+          <>
+          <ul className="divide-y divide-slate-100 md:hidden dark:divide-slate-800">
+            {data?.data.map((u) => (
+              <li key={u.id} className="flex items-start gap-3 px-4 py-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+                  {u.name.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-slate-800 dark:text-slate-100">{u.name}{u.id === me.id && <span className="ml-1 text-xs text-slate-400">(você)</span>}</p>
+                  <p className="truncate text-xs text-slate-500">{u.email}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {u.transactions_count} lançamentos · {u.last_login_at ? `acesso ${fmtDate(u.last_login_at, "dd/MM HH:mm")}` : "nunca acessou"}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Select value={u.role} disabled={u.id === me.id} onChange={(e) => patch(u, { role: e.target.value as User["role"] })} className="h-8 w-auto text-xs">
+                      <option value="user">Usuário</option><option value="admin">Admin</option>
+                    </Select>
+                    <button disabled={u.id === me.id} onClick={() => patch(u, { is_active: !u.is_active })}>
+                      {u.is_active ? <Badge tone="green">Ativo</Badge> : <Badge tone="red">Desativado</Badge>}
+                    </button>
+                  </div>
+                </div>
+                {u.id !== me.id && <button onClick={() => setToDelete(u)} className="rounded-lg p-2.5 text-slate-300 active:text-rose-600" aria-label={`Excluir ${u.name}`}><Trash2 className="h-4.5 w-4.5" /></button>}
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] text-sm">
               <thead className="bg-slate-50 text-left text-xs text-slate-500 uppercase dark:bg-slate-800/50">
                 <tr><th className="px-5 py-3">Usuário</th><th className="px-3 py-3">Perfil</th><th className="px-3 py-3">Status</th><th className="px-3 py-3">Lançamentos</th><th className="px-3 py-3">Último acesso</th><th className="px-3 py-3">Cadastro</th><th className="w-12" /></tr>
@@ -110,6 +136,7 @@ export default function AdminUsersPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
         {data && <Pagination page={data.meta.current_page} lastPage={data.meta.last_page} onChange={setPage} />}
       </Card>

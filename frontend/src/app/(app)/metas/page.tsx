@@ -9,7 +9,7 @@ import { cn, fmtDate, money, parseAmount, percent, today } from "@/lib/format";
 import { useInvalidateFinance } from "@/lib/queries";
 import type { Goal, Investment } from "@/lib/types";
 import { burstFrom, heartRain } from "@/components/cute";
-import { Badge, Button, ColorPicker, ConfirmDialog, cuteHover, DatePicker, EmptyState, Field, Input, Modal, MoneyInput, MultiSelect, PageHeader, Progress, Skeleton, Textarea } from "@/components/ui";
+import { Badge, Button, Carousel, ColorPicker, ConfirmDialog, cuteHover, DatePicker, EmptyState, Field, Input, Modal, MoneyInput, MultiSelect, PageHeader, Progress, Skeleton, Textarea } from "@/components/ui";
 import { MovementForm, type MovementState } from "@/components/investment-movement-form";
 
 export default function GoalsPage() {
@@ -50,11 +50,11 @@ export default function GoalsPage() {
         actions={<Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="h-4 w-4" /> Nova meta</Button>} />
 
       {data && data.data.length > 0 && (
-        <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <Carousel className="mb-6 sm:grid-cols-3">
           <Stat label="Total guardado" value={money(data.summary.saved)} />
           <Stat label="Soma dos objetivos" value={money(data.summary.target)} />
           <Stat label="Metas concluídas" value={`${data.summary.completed} de ${data.data.length}`} />
-        </div>
+        </Carousel>
       )}
 
       {isLoading ? <Skeleton className="h-64" /> : !data?.data.length ? (

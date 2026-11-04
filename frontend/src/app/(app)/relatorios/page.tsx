@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { cn, fmtDate, money, monthLabel, PAYMENT_METHODS, percent } from "@/lib/format";
 import { useAccounts } from "@/lib/queries";
 import type { CategorySlice, EvolutionPoint, Transaction } from "@/lib/types";
-import { Card, DatePicker, Dot, EmptyState, MultiSelect, PageHeader, Skeleton } from "@/components/ui";
+import { Card, Carousel, DatePicker, Dot, EmptyState, MultiSelect, PageHeader, Skeleton } from "@/components/ui";
 import { BalanceChart, CategoryBars, EvolutionChart } from "@/components/charts";
 
 interface Group { label: string; total: number; count: number; percent?: number; color?: string }
@@ -72,12 +72,12 @@ export default function ReportsPage() {
 
       {isLoading || !s ? <Skeleton className="h-96" /> : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Carousel className="sm:grid-cols-2 xl:grid-cols-4">
             <Kpi label="Receitas" value={money(s.income)} sub={`Média ${money(s.avg_monthly_income)}/mês`} tone="text-teal-600 dark:text-teal-400" />
             <Kpi label="Despesas" value={money(s.expense)} sub={`Média ${money(s.avg_monthly_expense)}/mês · ${money(s.avg_daily_expense)}/dia`} tone="text-rose-600 dark:text-rose-400" />
             <Kpi label="Resultado" value={money(s.balance)} sub={`${s.transactions} lançamentos`} tone={s.balance < 0 ? "text-rose-600" : undefined} />
             <Kpi label="Taxa de economia" value={percent(s.savings_rate)} sub="Quanto da receita sobrou" />
-          </div>
+          </Carousel>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-2">
             <Card title="Receitas x despesas por mês"><EvolutionChart data={data.evolution} height={260} /></Card>

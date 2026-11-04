@@ -8,7 +8,7 @@ import { api, parseError, type FieldErrors } from "@/lib/api";
 import { ACCOUNT_TYPES, cn, money, parseAmount } from "@/lib/format";
 import { useAccounts, useInvalidateFinance } from "@/lib/queries";
 import type { Account } from "@/lib/types";
-import { Badge, Button, ColorPicker, ConfirmDialog, cuteHover, EmptyState, Field, Input, Modal, MoneyInput, PageHeader, Progress, Select, Skeleton, Toggle } from "@/components/ui";
+import { Badge, Button, Carousel, ColorPicker, ConfirmDialog, cuteHover, EmptyState, Field, Input, Modal, MoneyInput, PageHeader, Progress, Select, Skeleton, Toggle } from "@/components/ui";
 import { ACCOUNT_ICONS } from "@/components/icons";
 
 export default function AccountsPage() {
@@ -42,11 +42,11 @@ export default function AccountsPage() {
         </>} />
 
       {data && (
-        <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <Carousel className="mb-6 sm:grid-cols-3">
           <Summary label="Saldo atual (contas)" value={data.summary.total_balance} />
           <Summary label="Saldo previsto (com pendentes)" value={data.summary.projected_balance} />
           <Summary label="Fatura/dívida de cartões" value={-data.summary.credit_card_debt} />
-        </div>
+        </Carousel>
       )}
 
       {isLoading ? (

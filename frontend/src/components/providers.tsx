@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/components/auth";
 import { PwaProvider } from "@/components/pwa";
 import { CuteSync } from "@/components/cute";
+import { PrivacySync } from "@/components/privacy";
 
 let browserQueryClient: QueryClient | undefined;
 
@@ -32,8 +33,9 @@ export function Providers({ children }: { children: ReactNode }) {
         <PwaProvider>
           <AuthProvider>{children}</AuthProvider>
         </PwaProvider>
-        <Toaster richColors position="top-right" closeButton />
+        <Toaster richColors position="top-center" closeButton offset={{ top: "calc(env(safe-area-inset-top) + 12px)" }} mobileOffset={{ top: "calc(env(safe-area-inset-top) + 8px)" }} />
         <CuteSync />
+        <PrivacySync />
       </QueryClientProvider>
     </ThemeProvider>
   );
