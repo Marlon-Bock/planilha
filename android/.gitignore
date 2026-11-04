@@ -1,0 +1,20 @@
+# Chave de assinatura: NUNCA versionar
+*.keystore
+*.jks
+
+# Gerado pelo Bubblewrap
+app/
+gradle/
+build/
+.gradle/
+*.apk
+*.aab
+*.idsig
+gradlew
+gradlew.bat
+build.gradle
+settings.gradle
+gradle.properties
+local.properties
+manifest-checksum.txt
+store_icon.png

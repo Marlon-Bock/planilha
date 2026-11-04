@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+/* Só aplica quando o "modo fofinho" está ligado (classe .cute no <html>). */
+@custom-variant cute (&:where(.cute, .cute *));
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Paleta do casal: rosa (600 tem contraste 4,6:1 com texto branco). */
+@theme {
+  --color-brand-50: #fdf2f8;
+  --color-brand-100: #fce7f3;
+  --color-brand-200: #fbcfe8;
+  --color-brand-300: #f9a8d4;
+  --color-brand-400: #f472b6;
+  --color-brand-500: #ec4899;
+  --color-brand-600: #db2777;
+  --color-brand-700: #be185d;
+  --color-brand-800: #9d174d;
+  --color-brand-900: #831843;
+
+  --animate-wiggle: wiggle 0.5s ease-in-out;
+  --animate-heartbeat: heartbeat 1.2s ease-in-out infinite;
+  --animate-bob: bob 3s ease-in-out infinite;
+  --animate-float-slow: float-slow 9s ease-in-out infinite;
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recharts: tooltips e eixos legíveis nos dois temas */
+.recharts-cartesian-axis-tick-value {
+  @apply fill-slate-500 text-xs;
+}
+.recharts-cartesian-grid line {
+  @apply stroke-slate-200 dark:stroke-slate-800;
+}
+
+/* ------------------------------- Animações ------------------------------- */
+
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-12deg); }
+  50% { transform: rotate(10deg); }
+  75% { transform: rotate(-6deg); }
+}
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.18); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.12); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-18px) rotate(6deg); }
+}
+/* Piscada dos gatinhos (o olho "fecha" rapidinho a cada ~4s). */
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+@keyframes tail {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(14deg); }
+}
+/* Coraçãozinho que sobe e some (explosão de corações). */
+@keyframes heart-fly {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--s)) rotate(var(--r)); }
+}
+/* Chuva de corações (mesversário). */
+@keyframes heart-rain {
+  0% { opacity: 0; transform: translateY(-10vh) rotate(0); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(105vh) rotate(var(--r)); }
+}
+
+.cat-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 4.2s infinite;
+}
+.cat-tail {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: tail 1.8s ease-in-out infinite;
+}
+
+/* Sem modo fofinho, ou para quem pede menos movimento: tudo parado. */
+html:not(.cute) .cat-eye,
+html:not(.cute) .cat-tail,
+html:not(.cute) [class*="animate-heartbeat"],
+html:not(.cute) [class*="animate-bob"],
+html:not(.cute) [class*="animate-float-slow"] {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

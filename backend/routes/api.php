@@ -1,0 +1,62 @@
+<?php
+
+use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BudgetController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\GoalController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\RecurringTransactionController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\TagController;
+use App\Http\Controllers\Api\TransactionController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+});
+
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
+    Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::get('auth/me', [AuthController::class, 'me']);
+    Route::put('profile', [AuthController::class, 'updateProfile']);
+    Route::put('profile/password', [AuthController::class, 'updatePassword']);
+    Route::delete('profile', [AuthController::class, 'destroyAccount']);
+
+    Route::get('dashboard', DashboardController::class);
+    Route::get('reports', ReportController::class);
+
+    Route::apiResource('accounts', AccountController::class);
+    Route::apiResource('categories', CategoryController::class)->except('show');
+    Route::apiResource('tags', TagController::class)->except('show');
+
+    Route::get('transactions/export', [TransactionController::class, 'export']);
+    Route::post('transactions/bulk', [TransactionController::class, 'bulk']);
+    Route::patch('transactions/{transaction}/pay', [TransactionController::class, 'togglePaid']);
+    Route::post('transactions/{transaction}/duplicate', [TransactionController::class, 'duplicate']);
+    Route::apiResource('transactions', TransactionController::class);
+
+    Route::post('recurring/generate', [RecurringTransactionController::class, 'generate']);
+    Route::apiResource('recurring', RecurringTransactionController::class)->except('show')
+        ->parameters(['recurring' => 'recurring']);
+
+    Route::post('budgets/copy', [BudgetController::class, 'copy']);
+    Route::apiResource('budgets', BudgetController::class)->except('show');
+
+    Route::post('goals/{goal}/contribute', [GoalController::class, 'contribute']);
+    Route::apiResource('goals', GoalController::class)->except('show');
+
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::post('notifications/check', [NotificationController::class, 'check'])->middleware('throttle:6,1');
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
+
+    Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::apiResource('users', AdminUserController::class)->except('show');
+    });
+});

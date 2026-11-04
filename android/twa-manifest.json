@@ -1,0 +1,40 @@
+{
+  "packageId": "br.com.seudominio.planilha",
+  "host": "planilha.seudominio.com.br",
+  "name": "Planilha do Casal",
+  "launcherName": "Planilha",
+  "display": "standalone",
+  "orientation": "default",
+  "themeColor": "#DB2777",
+  "themeColorDark": "#0F172A",
+  "navigationColor": "#DB2777",
+  "navigationColorDark": "#0F172A",
+  "navigationDividerColor": "#00000000",
+  "navigationDividerColorDark": "#00000000",
+  "backgroundColor": "#FDF2F8",
+  "enableNotifications": true,
+  "startUrl": "/dashboard",
+  "iconUrl": "https://planilha.seudominio.com.br/icons/icon-512.png",
+  "maskableIconUrl": "https://planilha.seudominio.com.br/icons/icon-maskable-512.png",
+  "webManifestUrl": "https://planilha.seudominio.com.br/manifest.webmanifest",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./planilha-release.keystore",
+    "alias": "planilha"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    { "name": "Lançamentos", "shortName": "Lançamentos", "url": "/transacoes", "chosenIconUrl": "https://planilha.seudominio.com.br/icons/icon-192.png" },
+    { "name": "Relatórios", "shortName": "Relatórios", "url": "/relatorios", "chosenIconUrl": "https://planilha.seudominio.com.br/icons/icon-192.png" },
+    { "name": "Avisos", "shortName": "Avisos", "url": "/avisos", "chosenIconUrl": "https://planilha.seudominio.com.br/icons/icon-192.png" }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21
+}
