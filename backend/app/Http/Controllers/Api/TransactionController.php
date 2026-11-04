@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\InvestmentMovement;
 use App\Models\Transaction;
 use App\Services\AlertService;
 use App\Support\TransactionFilter;
@@ -16,7 +17,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TransactionController extends Controller
 {
-    private const RELATIONS = ['account:id,name,color,type', 'transferAccount:id,name,color', 'category:id,name,color,icon,type', 'tags:id,name,color'];
+    private const RELATIONS = ['account:id,name,color,type', 'transferAccount:id,name,color', 'category:id,name,color,icon,type', 'tags:id,name,color', 'investment:id,name,color'];
 
     public function __construct(private AlertService $alerts) {}
 
@@ -107,8 +108,25 @@ class TransactionController extends Controller
         return response()->json(['data' => $transaction, 'installments' => $siblings]);
     }
 
+    /** Aplicações/resgates são controlados pela tela de investimentos. */
+    private function guardInvestment(Transaction $t): ?JsonResponse
+    {
+        return $t->isInvestmentLinked()
+            ? response()->json(['message' => 'Aplicações e resgates são editados na tela de Investimentos.'], 422)
+            : null;
+    }
+
+    /** Ao excluir aplicações/resgates por aqui, a movimentação do investimento vai junto. */
+    private function deleteLinkedMovements(array $transactionIds): void
+    {
+        InvestmentMovement::whereIn('transaction_id', $transactionIds)->delete();
+    }
+
     public function update(Request $request, Transaction $transaction): JsonResponse
     {
+        if ($blocked = $this->guardInvestment($transaction)) {
+            return $blocked;
+        }
         $data = $this->validated($request);
         $applyTo = $request->input('apply_to', 'this'); // this | future | all
         $tagIds = $data['tag_ids'] ?? null;
@@ -150,7 +168,10 @@ class TransactionController extends Controller
                 ->when($scope === 'future', fn ($q) => $q->where('installment_number', '>=', $transaction->installment_number))
                 ->delete();
         } else {
-            $transaction->delete();
+            DB::transaction(function () use ($transaction) {
+                $this->deleteLinkedMovements([$transaction->id]);
+                $transaction->delete();
+            });
             $deleted = 1;
         }
 
@@ -159,6 +180,9 @@ class TransactionController extends Controller
 
     public function togglePaid(Request $request, Transaction $transaction): JsonResponse
     {
+        if ($blocked = $this->guardInvestment($transaction)) {
+            return $blocked;
+        }
         $paid = $request->has('is_paid') ? $request->boolean('is_paid') : ! $transaction->is_paid;
         $transaction->update([
             'is_paid' => $paid,
@@ -170,6 +194,9 @@ class TransactionController extends Controller
 
     public function duplicate(Request $request, Transaction $transaction): JsonResponse
     {
+        if ($blocked = $this->guardInvestment($transaction)) {
+            return $blocked;
+        }
         $copy = $transaction->replicate(['installment_group', 'installment_number', 'installment_total', 'recurring_transaction_id']);
         $copy->is_paid = false;
         $copy->paid_at = null;
@@ -193,11 +220,19 @@ class TransactionController extends Controller
         ]);
 
         $query = Transaction::whereIn('id', $data['ids']);
+        // Aplicações/resgates só podem ser excluídos em massa; o resto é controlado pelo investimento.
+        if ($data['action'] !== 'delete') {
+            $query->whereNotIn('type', Transaction::INVESTMENT_TYPES);
+        }
 
         $affected = match ($data['action']) {
             'pay' => $query->where('is_paid', false)->update(['is_paid' => true, 'paid_at' => today()->toDateString()]),
             'unpay' => $query->update(['is_paid' => false, 'paid_at' => null]),
-            'delete' => $query->delete(),
+            'delete' => DB::transaction(function () use ($query) {
+                $this->deleteLinkedMovements((clone $query)->pluck('id')->all());
+
+                return $query->delete();
+            }),
             'category' => $query->where('type', '!=', 'transfer')->update(['category_id' => $data['category_id']]),
             'account' => $query->update(['account_id' => $data['account_id']]),
             'date' => $query->update(['date' => Carbon::parse($data['date'])->toDateString()]),
@@ -211,7 +246,7 @@ class TransactionController extends Controller
         $query = TransactionFilter::sort(TransactionFilter::apply(Transaction::query(), $request), $request)
             ->with(self::RELATIONS);
 
-        $types = ['income' => 'Receita', 'expense' => 'Despesa', 'transfer' => 'Transferência'];
+        $types = ['income' => 'Receita', 'expense' => 'Despesa', 'transfer' => 'Transferência', 'invest' => 'Aplicação', 'redeem' => 'Resgate'];
         $status = ['paid' => 'Pago', 'pending' => 'Pendente', 'overdue' => 'Vencido'];
         $filename = 'lancamentos-'.now()->format('Y-m-d-His').'.csv';
 

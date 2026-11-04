@@ -28,6 +28,21 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Web Push. Gere as chaves com `php artisan push:vapid`.
+    // subject: e-mail (mailto:) ou URL https de contato do responsável pelo sistema.
+    'webpush' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', 'mailto:contato@planilha.app'),
+    ],
+
+    // Taxas usadas só se a API do Banco Central estiver fora do ar (% ao ano).
+    'market' => [
+        'cdi' => env('MARKET_CDI_FALLBACK', 13.65),
+        'selic' => env('MARKET_SELIC_FALLBACK', 13.75),
+        'ipca' => env('MARKET_IPCA_FALLBACK', 4.5),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

@@ -6,11 +6,12 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import {
-  ArrowLeftRight, Bell, ChevronsUpDown, ShieldCheck, ChartColumn, LayoutDashboard, LogOut, Menu, Moon, PiggyBank, Plus, Repeat, Sun, Tags,
+  ArrowLeftRight, Bell, ChartLine, ChevronsUpDown, ShieldCheck, ChartColumn, LayoutDashboard, LogOut, Menu, Moon, PiggyBank, Plus, Repeat, Sun, Tags,
   Target, UserCog, Users, Wallet, X, type LucideIcon,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { cn, fmtDate } from "@/lib/format";
+import { cn, fmtDate, isInvestmentTx } from "@/lib/format";
+import { toast } from "sonner";
 import { rememberNext, resolveLink } from "@/lib/navigation";
 import type { AppNotification, Transaction, User } from "@/lib/types";
 import { useAuth } from "@/components/auth";
@@ -37,6 +38,7 @@ const nav: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/contas", label: "Contas e cartões", icon: Wallet },
   { href: "/categorias", label: "Categorias e tags", icon: Tags },
   { href: "/orcamentos", label: "Orçamentos", icon: PiggyBank },
+  { href: "/investimentos", label: "Investimentos", icon: ChartLine },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/recorrentes", label: "Recorrentes", icon: Repeat },
   { href: "/relatorios", label: "Relatórios", icon: ChartColumn },
@@ -72,9 +74,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     setFormOpen(true);
   }, []);
   const openEdit = useCallback((t: Transaction) => {
+    // Aplicações/resgates são controlados pelo investimento.
+    if (isInvestmentTx(t.type)) {
+      toast.info(`${t.type === "invest" ? "Aplicações" : "Resgates"} são editados na tela de Investimentos`);
+      router.push("/investimentos");
+      return;
+    }
     setEditing(t);
     setFormOpen(true);
-  }, []);
+  }, [router]);
 
   if (loading || !user) {
     return (

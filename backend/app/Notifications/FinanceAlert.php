@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Models\PushSubscription;
+use App\Notifications\Channels\WebPushChannel;
 use Illuminate\Notifications\Notification;
 
 class FinanceAlert extends Notification
@@ -22,7 +24,24 @@ class FinanceAlert extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+        // Também manda para o celular/PC, se o usuário ativou as notificações em algum aparelho.
+        if (PushSubscription::withoutGlobalScopes()->where('user_id', $notifiable->getKey())->exists()) {
+            $channels[] = WebPushChannel::class;
+        }
+
+        return $channels;
+    }
+
+    /** @return array{title: string, body: string, url: string, tag: string} */
+    public function toWebPush(object $notifiable): array
+    {
+        return [
+            'title' => $this->title,
+            'body' => $this->message,
+            'url' => '/avisos', // URL limpa; na tela de avisos tem o "Ver detalhes"
+            'tag' => $this->key,
+        ];
     }
 
     public function toArray(object $notifiable): array

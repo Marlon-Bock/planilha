@@ -61,6 +61,21 @@ php artisan schedule:work               # em dev
 
 As duas também podem ser disparadas pela interface ("Gerar lançamentos" e "Verificar agora").
 
+### Notificações push (app fechado)
+
+Os avisos (contas a vencer/vencidas, orçamento, metas, saldo negativo) também chegam como notificação
+no celular/PC, inclusive com o app fechado. Cada pessoa ativa em **Perfil → Notificações no celular e no PC**.
+
+- Funciona no Chrome/Edge/Firefox (PC e Android, inclusive no APK/TWA) e no iPhone com iOS 16.4+
+  **com o app adicionado à tela de início**. Exige **HTTPS** (no PC, `localhost` também serve).
+- Chaves do servidor: `php artisan push:vapid` → copie para o `.env` (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+  `VAPID_SUBJECT=mailto:seu-email`). Trocar as chaves obriga cada aparelho a ativar de novo.
+- Os avisos são gerados pela rotina diária (`finance:check-alerts`, 07:00): o **agendador precisa estar rodando**
+  (`schedule:work` em dev ou o cron em produção).
+- **Windows (só em dev):** o PHP precisa da variável `OPENSSL_CONF` apontando para o `openssl.cnf`
+  (no Herd: `%USERPROFILE%\.config\herd\bin\php84\extras\ssl\openssl.cnf`) ao rodar `artisan serve`
+  e `schedule:work`; sem ela, a criptografia das notificações falha. Em servidor Linux não é necessário.
+
 ## Testes
 
 ```bash

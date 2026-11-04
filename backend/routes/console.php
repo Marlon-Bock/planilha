@@ -24,5 +24,15 @@ Artisan::command('finance:check-alerts', function (AlertService $alerts) {
     $this->info("{$total} aviso(s) criado(s).");
 })->purpose('Cria avisos de contas a vencer/vencidas, orçamentos estourados, metas e saldo negativo');
 
+Artisan::command('push:vapid', function () {
+    // No Windows, defina OPENSSL_CONF apontando para o openssl.cnf do PHP se der "Unable to create the key".
+    $keys = \Minishlink\WebPush\VAPID::createVapidKeys();
+    $this->info('Coloque no .env do backend (e guarde a chave privada com segurança):');
+    $this->line("VAPID_PUBLIC_KEY={$keys['publicKey']}");
+    $this->line("VAPID_PRIVATE_KEY={$keys['privateKey']}");
+    $this->line('VAPID_SUBJECT=mailto:seu-email@dominio.com');
+    $this->warn('Trocar as chaves invalida as inscrições existentes: cada aparelho precisa ativar de novo.');
+})->purpose('Gera as chaves VAPID para as notificações Web Push');
+
 Schedule::command('finance:generate-recurring')->dailyAt('00:10');
 Schedule::command('finance:check-alerts')->dailyAt('07:00');

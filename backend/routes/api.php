@@ -7,7 +7,9 @@ use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GoalController;
+use App\Http\Controllers\Api\InvestmentController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\RecurringTransactionController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TagController;
@@ -48,6 +50,18 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
     Route::post('goals/{goal}/contribute', [GoalController::class, 'contribute']);
     Route::apiResource('goals', GoalController::class)->except('show');
+
+    Route::get('investment-movements', [InvestmentController::class, 'allMovements']);
+    Route::get('investments/{investment}/movements', [InvestmentController::class, 'movements']);
+    Route::post('investments/{investment}/movements', [InvestmentController::class, 'storeMovement']);
+    Route::delete('investments/{investment}/movements/{movement}', [InvestmentController::class, 'destroyMovement']);
+    Route::apiResource('investments', InvestmentController::class)->except('show');
+
+    // Web Push (notificações com o app fechado)
+    Route::get('push', [PushSubscriptionController::class, 'index']);
+    Route::post('push/subscribe', [PushSubscriptionController::class, 'store']);
+    Route::delete('push/subscribe', [PushSubscriptionController::class, 'destroy']);
+    Route::post('push/test', [PushSubscriptionController::class, 'test'])->middleware('throttle:5,1');
 
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);

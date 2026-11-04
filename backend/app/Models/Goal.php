@@ -24,6 +24,12 @@ class Goal extends Model
         ];
     }
 
+    /** Caixinhas/investimentos vinculados: o "já guardado" vira o saldo deles. */
+    public function investments(): HasMany
+    {
+        return $this->hasMany(Investment::class);
+    }
+
     public function contributions(): HasMany
     {
         return $this->hasMany(GoalContribution::class)->latest('date')->latest('id');

@@ -83,7 +83,12 @@ export const TX_TYPES: Record<string, string> = {
   income: "Receita",
   expense: "Despesa",
   transfer: "Transferência",
+  invest: "Aplicação",
+  redeem: "Resgate",
 };
+
+/** Aplicações e resgates vêm dos investimentos (não são editados na tela de lançamentos). */
+export const isInvestmentTx = (type: string) => type === "invest" || type === "redeem";
 
 export const FREQUENCIES: Record<string, string> = {
   weekly: "Semanal",
@@ -96,3 +101,36 @@ export const COLORS = [
   "#eab308", "#84cc16", "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6",
   "#64748b", "#78716c",
 ];
+
+export const INVESTMENT_TYPES: Record<string, string> = {
+  caixinha: "Caixinha",
+  cdb: "CDB",
+  tesouro: "Tesouro Direto",
+  lci_lca: "LCI / LCA",
+  poupanca: "Poupança",
+  previdencia: "Previdência",
+  acoes: "Ações",
+  fii: "Fundos imobiliários",
+  cripto: "Cripto",
+  outro: "Outro",
+};
+
+export const RATE_TYPES: Record<string, string> = {
+  cdi: "% do CDI",
+  prefixed: "Prefixado (% a.a.)",
+  ipca: "IPCA + % a.a.",
+  poupanca: "Regra da poupança",
+  variable: "Renda variável (sem taxa)",
+};
+
+/** Ex.: "115% do CDI", "IPCA + 6,2%", "12,5% a.a.". */
+export function rateLabel(rateType: string, rate: number | null) {
+  const n = (v: number | null) => (v ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+  switch (rateType) {
+    case "cdi": return `${n(rate)}% do CDI`;
+    case "prefixed": return `${n(rate)}% a.a.`;
+    case "ipca": return `IPCA + ${n(rate)}%`;
+    case "poupanca": return "Poupança";
+    default: return "Renda variável";
+  }
+}

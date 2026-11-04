@@ -50,6 +50,8 @@ class Account extends Model
                 WHEN transactions.type = 'expense' AND transactions.account_id = accounts.id THEN -transactions.amount
                 WHEN transactions.type = 'transfer' AND transactions.account_id = accounts.id THEN -transactions.amount
                 WHEN transactions.type = 'transfer' AND transactions.transfer_account_id = accounts.id THEN transactions.amount
+                WHEN transactions.type = 'invest' AND transactions.account_id = accounts.id THEN -transactions.amount
+                WHEN transactions.type = 'redeem' AND transactions.account_id = accounts.id THEN transactions.amount
                 ELSE 0 END), 0)")
             ->where(fn ($q) => $q->whereColumn('transactions.account_id', 'accounts.id')
                 ->orWhereColumn('transactions.transfer_account_id', 'accounts.id'))

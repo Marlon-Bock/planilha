@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Goal;
+use App\Models\Investment;
+use App\Services\GoalProgress;
+use App\Services\InvestmentCalculator;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -12,8 +15,11 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, InvestmentCalculator $calc, GoalProgress $goalProgress): JsonResponse
     {
+        $investmentModels = Investment::with('movements')->where('is_active', true)->get();
+        $investments = $investmentModels->map(fn ($i) => $calc->present($i))->sortByDesc('balance')->values();
+
         $request->validate(['month' => ['nullable', 'date_format:Y-m']]);
         $month = $request->input('month', now()->format('Y-m'));
         $start = Carbon::createFromFormat('Y-m-d', $month.'-01')->startOfDay();
@@ -56,7 +62,13 @@ class DashboardController extends Controller
             'recent' => Transaction::with(['category:id,name,color,icon', 'account:id,name,color'])
                 ->latest('date')->latest('id')->limit(8)->get(),
             'budgets' => collect(BudgetController::forMonth($month)['data'])->take(6)->values(),
-            'goals' => Goal::whereNull('completed_at')->orderBy('deadline')->limit(4)->get(),
+            // Metas ligadas a caixinhas têm o "já guardado" recalculado com o saldo de hoje.
+            'goals' => $goalProgress->hydrate(Goal::get())->whereNull('completed_at')->sortBy(fn ($g) => $g->deadline?->timestamp ?? PHP_INT_MAX)->take(4)->values(),
+            'investments' => [
+                'summary' => $calc->summarize($investments),
+                'evolution' => $investmentModels->isEmpty() ? [] : $calc->evolution($investmentModels),
+                'items' => $investments->take(5)->map(fn ($p) => collect($p)->only(['id', 'name', 'institution', 'color', 'balance', 'yield', 'yield_percent', 'month_yield', 'rate_type', 'rate', 'is_estimated']))->values(),
+            ],
             'unread_notifications' => $request->user()->unreadNotifications()->count(),
         ]);
     }

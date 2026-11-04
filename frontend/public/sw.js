@@ -4,7 +4,7 @@
  * - Arquivos estáticos do Next (/_next/static) e ícones: cache primeiro (são versionados).
  * - Páginas: rede primeiro; sem conexão, usa a última cópia ou a página /offline.
  */
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC_CACHE = `planilha-static-${VERSION}`;
 const PAGES_CACHE = `planilha-pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -65,3 +65,45 @@ async function networkFirstPage(request) {
     return (await cache.match(request)) || (await caches.match(OFFLINE_URL)) || Response.error();
   }
 }
+
+/* ------------------------------ Web Push ------------------------------ */
+// Chega mesmo com o app fechado: o navegador acorda este service worker só para mostrar o aviso.
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : "" };
+  }
+  const title = data.title || "Planilha do Casal";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: data.body || "",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/badge-72.png", // ícone monocromático da barra de status do Android
+      tag: data.tag || undefined, // o mesmo aviso não empilha
+      renotify: Boolean(data.tag),
+      lang: "pt-BR",
+      vibrate: [80, 40, 80],
+      data: { url: data.url || "/avisos" },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  // Só caminhos do próprio app e sem parâmetros (URL sempre limpa).
+  const path = new URL(event.notification.data?.url || "/avisos", self.location.origin).pathname;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if (new URL(client.url).origin === self.location.origin) {
+        await client.focus();
+        if ("navigate" in client) await client.navigate(path);
+        return;
+      }
+    }
+    await self.clients.openWindow(path);
+  })());
+});

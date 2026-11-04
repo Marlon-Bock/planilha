@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useQueryClient } from "@tanstack/react-query";
 import { api, ensureCsrf } from "@/lib/api";
 import { setCurrency } from "@/lib/format";
+import { detachPushFromAccount } from "@/components/push";
 import type { User } from "@/lib/types";
 
 interface AuthState {
@@ -53,6 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      // Este aparelho deixa de receber os avisos desta conta.
+      await detachPushFromAccount();
       await api.post("/auth/logout");
     } finally {
       qc.clear();

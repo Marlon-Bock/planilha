@@ -6,7 +6,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, Copy, Download, Layers, Pencil, Repeat, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { api, parseError } from "@/lib/api";
-import { cn, currentMonth, fmtDate, money, PAYMENT_METHODS } from "@/lib/format";
+import { cn, currentMonth, fmtDate, isInvestmentTx, money, PAYMENT_METHODS } from "@/lib/format";
 import { useAccounts, useCategories, useInvalidateFinance, useTags } from "@/lib/queries";
 import type { Paginated, Totals, Transaction } from "@/lib/types";
 import { Button, Card, Checkbox, ConfirmDialog, DatePicker, Dot, EmptyState, Input, Modal, MoneyInput, MonthPicker, MultiSelect, PageHeader, Pagination, Select, Skeleton, Field } from "@/components/ui";
@@ -218,6 +218,8 @@ export default function TransactionsPage() {
               <option value="expense">Somente despesas</option>
               <option value="income">Somente receitas</option>
               <option value="transfer">Somente transferências</option>
+              <option value="invest">Aplicações em investimentos</option>
+              <option value="redeem">Resgates de investimentos</option>
             </Select>
             <MultiSelect label="Contas" options={accounts} value={filters.account_ids} onChange={(v) => update({ account_ids: v })} />
             <MultiSelect label="Categorias" options={filters.type && filters.type !== "transfer" ? categories.filter((c) => c.type === filters.type) : categories} value={filters.category_ids} onChange={(v) => update({ category_ids: v })} />
@@ -297,7 +299,12 @@ export default function TransactionsPage() {
                       </div>
                     </td>
                     <td className="px-3 py-2.5">
-                      {t.type === "transfer" ? (
+                      {isInvestmentTx(t.type) ? (
+                        <span className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                          <CategoryIcon icon="trending-up" color={t.investment?.color ?? "#7c3aed"} size="sm" />
+                          <span className="truncate">{t.type === "invest" ? "Aplicação →" : "Resgate ←"} {t.investment?.name ?? "investimento excluído"}</span>
+                        </span>
+                      ) : t.type === "transfer" ? (
                         <span className="text-xs text-slate-500">Transferência → {t.transfer_account?.name}</span>
                       ) : t.category ? (
                         <span className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-300"><CategoryIcon icon={t.category.icon} color={t.category.color} size="sm" /><span className="truncate">{t.category.name}</span></span>
@@ -305,15 +312,18 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-3 py-2.5"><span className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400"><Dot color={t.account?.color} />{t.account?.name}</span></td>
                     <td className="px-3 py-2.5">
-                      <button onClick={(e) => togglePaid(t, e)} title="Clique para alternar o status"><StatusBadge t={t} /></button>
+                      {isInvestmentTx(t.type)
+                        ? <StatusBadge t={t} />
+                        : <button onClick={(e) => togglePaid(t, e)} title="Clique para alternar o status"><StatusBadge t={t} /></button>}
                     </td>
-                    <td className={cn("tabular px-3 py-2.5 text-right font-semibold whitespace-nowrap", t.type === "income" ? "text-teal-600 dark:text-teal-400" : t.type === "expense" ? "text-slate-900 dark:text-white" : "text-slate-500")}>
-                      {t.type === "expense" ? "−" : t.type === "income" ? "+" : ""}{money(t.amount)}
+                    <td className={cn("tabular px-3 py-2.5 text-right font-semibold whitespace-nowrap",
+                      t.type === "income" ? "text-teal-600 dark:text-teal-400" : t.type === "expense" ? "text-slate-900 dark:text-white" : isInvestmentTx(t.type) ? "text-violet-600 dark:text-violet-400" : "text-slate-500")}>
+                      {t.type === "expense" || t.type === "invest" ? "−" : t.type === "income" || t.type === "redeem" ? "+" : ""}{money(t.amount)}
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex justify-end gap-0.5 opacity-60 group-hover:opacity-100">
-                        <IconBtn title="Editar" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></IconBtn>
-                        <IconBtn title="Duplicar no próximo mês" onClick={() => duplicate(t)}><Copy className="h-4 w-4" /></IconBtn>
+                        <IconBtn title={isInvestmentTx(t.type) ? "Ver em Investimentos" : "Editar"} onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></IconBtn>
+                        {!isInvestmentTx(t.type) && <IconBtn title="Duplicar no próximo mês" onClick={() => duplicate(t)}><Copy className="h-4 w-4" /></IconBtn>}
                         <IconBtn title="Excluir" danger onClick={() => { setDeleteScope("this"); setToDelete(t); }}><Trash2 className="h-4 w-4" /></IconBtn>
                       </div>
                     </td>
@@ -327,7 +337,8 @@ export default function TransactionsPage() {
       </Card>
 
       <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={confirmDelete} loading={busy} title="Excluir lançamento" confirmLabel="Excluir"
-        message={<>Excluir <strong>{toDelete?.description}</strong> ({money(toDelete?.amount)})? Essa ação não pode ser desfeita.</>}>
+        message={<>Excluir <strong>{toDelete?.description}</strong> ({money(toDelete?.amount)})? Essa ação não pode ser desfeita.
+          {toDelete && isInvestmentTx(toDelete.type) && <> A movimentação correspondente no investimento também será removida.</>}</>}>
         {toDelete?.installment_group && (
           <Field label="Este lançamento é parcelado. Excluir:">
             <Select value={deleteScope} onChange={(e) => setDeleteScope(e.target.value)}>

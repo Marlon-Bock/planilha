@@ -7,6 +7,7 @@ import type { User } from "@/lib/types";
 import { useAuth } from "@/components/auth";
 import { Badge, Button, Card, ConfirmDialog, DatePicker, Field, Input, PageHeader, Select, Toggle } from "@/components/ui";
 import { Cat, Heart, useCuteMode } from "@/components/cute";
+import { PushSettingsCard } from "@/components/push";
 
 export default function ProfilePage() {
   const { user, setUser, logout } = useAuth();
@@ -105,6 +106,8 @@ export default function ProfilePage() {
             <Button type="submit" loading={saving}>Salvar alterações</Button>
           </form>
         </Card>
+
+        <PushSettingsCard />
 
         <Card title="Aparência">
           <div className="flex items-center gap-4">

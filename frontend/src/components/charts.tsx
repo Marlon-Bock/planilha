@@ -127,3 +127,50 @@ export function CategoryBars({ data, limit = 8, onSelect }: { data: CategorySlic
     </ul>
   );
 }
+
+/* ------------------------------ Investimentos ------------------------------ */
+
+// Par validado (CVD deutan ΔE 15, contraste ≥ 3:1 em claro e escuro); "investido" também é tracejado.
+export const INVEST_BALANCE_COLOR = "#7c3aed";
+export const INVEST_INVESTED_COLOR = "#0891b2";
+
+/** Saldo dos investimentos x quanto foi investido, mês a mês (um único eixo, em R$). */
+export function InvestmentEvolutionChart({ data, height = 260 }: { data: { month: string; balance: number; invested: number }[]; height?: number }) {
+  return (
+    <div>
+      <Legend items={[{ label: "Saldo", color: INVEST_BALANCE_COLOR }, { label: "Investido (aportes − resgates)", color: INVEST_INVESTED_COLOR }]} />
+      <ResponsiveContainer width="100%" height={height}>
+        <AreaChart data={data} margin={{ left: 4, right: 4, top: 4 }}>
+          <defs>
+            <linearGradient id="invFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={INVEST_BALANCE_COLOR} stopOpacity={0.22} />
+              <stop offset="100%" stopColor={INVEST_BALANCE_COLOR} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid vertical={false} />
+          <XAxis dataKey="month" tickFormatter={(m) => monthLabel(m, true)} tickLine={false} axisLine={false} />
+          <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={64} />
+          <Tooltip cursor={{ stroke: "#94a3b8" }} content={<ChartTooltip labelFormat={(m) => monthLabel(m)} />} />
+          <Area type="monotone" dataKey="invested" name="Investido" stroke={INVEST_INVESTED_COLOR} strokeWidth={2} strokeDasharray="5 4" fill="none" activeDot={{ r: 4 }} />
+          <Area type="monotone" dataKey="balance" name="Saldo" stroke={INVEST_BALANCE_COLOR} strokeWidth={2} fill="url(#invFill)" activeDot={{ r: 4 }} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/** Quanto rendeu em cada mês. */
+export function MonthlyYieldChart({ data, height = 220 }: { data: { month: string; yield: number }[]; height?: number }) {
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} margin={{ left: 4, right: 4, top: 4 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="month" tickFormatter={(m) => monthLabel(m, true)} tickLine={false} axisLine={false} />
+        <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={64} />
+        <ReferenceLine y={0} stroke="#94a3b8" />
+        <Tooltip cursor={{ fill: "rgba(148,163,184,0.12)" }} content={<ChartTooltip labelFormat={(m) => monthLabel(m)} />} />
+        <Bar dataKey="yield" name="Rendimento" fill={INCOME_COLOR} radius={[4, 4, 4, 4]} maxBarSize={28} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}

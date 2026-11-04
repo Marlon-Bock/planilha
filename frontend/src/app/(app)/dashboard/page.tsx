@@ -6,16 +6,16 @@ import Link from "next/link";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, CalendarClock, Check, Landmark, Scale, Target, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ArrowDownRight, ArrowUpRight, CalendarClock, ChartLine, Check, Landmark, PiggyBank, Scale, Sparkles, Target, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import { api } from "@/lib/api";
-import { cn, currentMonth, fmtDate, money, monthLabel, percent } from "@/lib/format";
+import { cn, currentMonth, fmtDate, money, monthLabel, percent, rateLabel } from "@/lib/format";
 import { useInvalidateFinance } from "@/lib/queries";
-import type { Budget, CategorySlice, EvolutionPoint, Goal, Transaction } from "@/lib/types";
+import type { Budget, CategorySlice, EvolutionPoint, Goal, Investment, InvestmentSummary, Transaction } from "@/lib/types";
 import { Card, cuteHover, Dot, EmptyState, MonthPicker, PageHeader, Progress, Skeleton } from "@/components/ui";
 import { CoupleGreeting } from "@/components/couple-greeting";
 import { burstFrom } from "@/components/cute";
 import { StatusBadge } from "@/components/status-badge";
-import { CategoryBars, DailyChart, EvolutionChart } from "@/components/charts";
+import { CategoryBars, DailyChart, EvolutionChart, InvestmentEvolutionChart } from "@/components/charts";
 import { CategoryIcon } from "@/components/icons";
 import { useTxForm } from "@/components/app-shell";
 import { useRouter } from "next/navigation";
@@ -37,6 +37,11 @@ interface DashboardData {
   recent: Transaction[];
   budgets: Budget[];
   goals: Goal[];
+  investments: {
+    summary: InvestmentSummary;
+    items: Pick<Investment, "id" | "name" | "institution" | "color" | "balance" | "yield" | "yield_percent" | "month_yield" | "rate_type" | "rate" | "is_estimated">[];
+    evolution: { month: string; balance: number; invested: number; yield: number }[];
+  };
 }
 
 export default function DashboardPage() {
@@ -94,6 +99,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      {data && <InvestmentsCard inv={data.investments} accountsTotal={data.summary.total_balance} />}
+
       <div className="mt-6 grid gap-6 xl:grid-cols-3">
         <Card title="Contas a pagar e receber" className="xl:col-span-2" padded={false}
           action={<TxLink filters={{ status: "unpaid" }} className="text-xs text-brand-600 hover:underline">Ver todas</TxLink>}>
@@ -108,7 +115,7 @@ export default function DashboardPage() {
                   </button>
                   <StatusBadge t={t} />
                   <span className={cn("tabular w-28 text-right text-sm font-semibold", t.type === "income" ? "text-teal-600 dark:text-teal-400" : "text-slate-900 dark:text-white")}>
-                    {money(t.type === "expense" ? -t.amount : t.amount)}
+                    {money(t.type === "expense" || t.type === "invest" ? -t.amount : t.amount)}
                   </span>
                   <button onClick={(e) => pay(t, e)} title="Marcar como pago" className="rounded-lg p-1.5 text-slate-400 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-500/10">
                     <Check className="h-4 w-4" />
@@ -160,13 +167,13 @@ export default function DashboardPage() {
               {data.recent.map((t) => (
                 <li key={t.id}>
                   <button onClick={() => openEdit(t)} className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <CategoryIcon icon={t.category?.icon ?? (t.type === "transfer" ? "repeat" : "tag")} color={t.category?.color} size="sm" />
+                    <CategoryIcon icon={t.investment ? "trending-up" : t.category?.icon ?? (t.type === "transfer" ? "repeat" : "tag")} color={t.investment?.color ?? t.category?.color} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm text-slate-800 dark:text-slate-100">{t.description}</span>
-                      <span className="text-xs text-slate-500">{fmtDate(t.date)} · {t.category?.name ?? (t.type === "transfer" ? "Transferência" : "Sem categoria")}</span>
+                      <span className="text-xs text-slate-500">{fmtDate(t.date)} · {t.investment ? `${t.type === "invest" ? "Aplicação em" : "Resgate de"} ${t.investment.name}` : t.category?.name ?? (t.type === "transfer" ? "Transferência" : "Sem categoria")}</span>
                     </span>
                     <span className={cn("tabular text-sm font-medium", t.type === "income" ? "text-teal-600 dark:text-teal-400" : t.type === "expense" ? "text-slate-900 dark:text-white" : "text-slate-500")}>
-                      {money(t.type === "expense" ? -t.amount : t.amount)}
+                      {money(t.type === "expense" || t.type === "invest" ? -t.amount : t.amount)}
                     </span>
                   </button>
                 </li>
@@ -200,9 +207,12 @@ const tones = {
   brand: "bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400",
   income: "bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400",
   expense: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400",
+  invest: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400",
 };
 
-function StatCard({ icon: Icon, label, value, sub, tone, variation, invert }: { icon: LucideIcon; label: string; value: string; sub?: string; tone: keyof typeof tones; variation?: number | null; invert?: boolean }) {
+function StatCard({ icon: Icon, label, value, sub, tone, variation, invert, valueClass }: {
+  icon: LucideIcon; label: string; value: string; sub?: string; tone: keyof typeof tones; variation?: number | null; invert?: boolean; valueClass?: string;
+}) {
   const good = variation !== null && variation !== undefined && (invert ? variation <= 0 : variation >= 0);
   return (
     <div className={cn("group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900", cuteHover)}>
@@ -210,7 +220,7 @@ function StatCard({ icon: Icon, label, value, sub, tone, variation, invert }: { 
         <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
         <span className={cn("rounded-lg p-2", tones[tone])}><Icon className="h-4 w-4 cute:group-hover:animate-wiggle" /></span>
       </div>
-      <p className="tabular mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{value}</p>
+      <p className={cn("tabular mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white", valueClass)}>{value}</p>
       <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
         {variation !== null && variation !== undefined && (
           <span className={cn("inline-flex items-center font-medium", good ? "text-teal-600" : "text-rose-600")}>
@@ -221,5 +231,70 @@ function StatCard({ icon: Icon, label, value, sub, tone, variation, invert }: { 
         <span className="truncate">{sub}</span>
       </div>
     </div>
+  );
+}
+
+/** Patrimônio do casal: contas + investimentos, com o rendimento. */
+function InvestmentsCard({ inv, accountsTotal }: { inv: DashboardData["investments"]; accountsTotal: number }) {
+  const s = inv.summary;
+  const pos = (v: number) => (v >= 0 ? "text-teal-600 dark:text-teal-400" : "text-rose-600");
+  const patrimony = accountsTotal + s.balance;
+  return (
+    <section className="mt-8">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
+          <ChartLine className="h-5 w-5 text-violet-500" /> Investimentos
+        </h2>
+        <Link href="/investimentos" className="text-sm text-brand-600 hover:underline">Ver detalhes</Link>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={Landmark} tone="invest" label="Total investido hoje" value={money(s.balance)}
+          sub={`Vocês colocaram ${money(s.invested)}`} />
+        <StatCard icon={TrendingUp} tone={s.yield >= 0 ? "income" : "expense"} label="Rendimento total" value={money(s.yield, { sign: true })}
+          valueClass={pos(s.yield)} sub={s.yield_percent !== null ? `${percent(s.yield_percent, 2)} sobre o investido` : undefined} />
+        <StatCard icon={Sparkles} tone={s.month_yield >= 0 ? "income" : "expense"} label="Rendeu este mês" value={money(s.month_yield, { sign: true })}
+          valueClass={pos(s.month_yield)} sub={s.daily_yield > 0 ? `~${money(s.daily_yield)} por dia útil · próx. 30 dias ~${money(s.projected_month_yield)}` : undefined} />
+        <StatCard icon={PiggyBank} tone="brand" label="Patrimônio total" value={money(patrimony)}
+          sub={`${percent(patrimony > 0 ? (s.balance / patrimony) * 100 : 0, 0)} investido · contas ${money(accountsTotal)}`} />
+      </div>
+
+      {/* Sem investimentos ainda: os quadrinhos ficam zerados e aparece o convite. */}
+      {!s.count ? (
+        <Link href="/investimentos" className={cn("mt-6 flex items-center gap-3 rounded-2xl border border-dashed border-violet-300 bg-violet-50/50 px-5 py-4 text-sm text-violet-800 dark:border-violet-500/30 dark:bg-violet-500/5 dark:text-violet-300", cuteHover)}>
+          <ChartLine className="h-5 w-5 shrink-0" />
+          <span>Têm caixinhas no Nubank ou outros investimentos? <strong>Cadastre aqui</strong> e os quadrinhos acima passam a mostrar quanto está rendendo.</span>
+        </Link>
+      ) : (
+      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+        <Card title="Evolução dos investimentos (12 meses)" className="xl:col-span-2">
+          <InvestmentEvolutionChart data={inv.evolution} height={240} />
+        </Card>
+        <Card title="Seus investimentos" padded={false}
+          action={<span className="tabular text-xs text-slate-500">{s.count} ativo{s.count > 1 ? "s" : ""}</span>}>
+          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            {inv.items.map((i) => (
+              <li key={i.id} className="flex items-center gap-3 px-5 py-3 text-sm">
+                <Dot color={i.color} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-slate-800 dark:text-slate-100">{i.name}</span>
+                  <span className="text-xs text-slate-500">{[i.institution, rateLabel(i.rate_type, i.rate)].filter(Boolean).join(" · ")}</span>
+                </span>
+                <span className="text-right">
+                  <span className="tabular block font-semibold text-slate-900 dark:text-white">{money(i.balance)}</span>
+                  <span className={cn("tabular block text-xs", pos(i.month_yield))}>{money(i.month_yield, { sign: true })} no mês</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {s.count > inv.items.length && (
+            <Link href="/investimentos" className="block border-t border-slate-100 py-2.5 text-center text-sm text-brand-600 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800">
+              Ver todos os {s.count}
+            </Link>
+          )}
+        </Card>
+      </div>
+      )}
+    </section>
   );
 }

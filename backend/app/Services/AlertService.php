@@ -102,6 +102,8 @@ class AlertService
     public function checkGoals(User $user): int
     {
         $count = 0;
+        // Metas ligadas a caixinhas: atualiza o "já guardado" com o saldo de hoje antes de conferir.
+        app(GoalProgress::class)->hydrate(Goal::withoutGlobalScopes()->where('user_id', $user->id)->get());
         $goals = Goal::withoutGlobalScopes()->where('user_id', $user->id)
             ->whereColumn('current_amount', '>=', 'target_amount')->get();
 

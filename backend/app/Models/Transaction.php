@@ -12,11 +12,14 @@ class Transaction extends Model
 {
     use BelongsToUser;
 
+    /** Tipos que o usuário lança direto na tela de lançamentos. */
     public const TYPES = ['income', 'expense', 'transfer'];
+    /** Gerados pelos investimentos: aplicação (sai da conta) e resgate (volta para a conta). */
+    public const INVESTMENT_TYPES = ['invest', 'redeem'];
     public const PAYMENT_METHODS = ['pix', 'debit', 'credit', 'cash', 'boleto', 'transfer', 'other'];
 
     protected $fillable = [
-        'user_id', 'account_id', 'transfer_account_id', 'category_id', 'recurring_transaction_id',
+        'user_id', 'account_id', 'transfer_account_id', 'category_id', 'recurring_transaction_id', 'investment_id',
         'type', 'description', 'amount', 'date', 'is_paid', 'paid_at', 'payment_method',
         'installment_group', 'installment_number', 'installment_total', 'notes',
     ];
@@ -55,6 +58,16 @@ class Transaction extends Model
     public function recurring(): BelongsTo
     {
         return $this->belongsTo(RecurringTransaction::class, 'recurring_transaction_id');
+    }
+
+    public function investment(): BelongsTo
+    {
+        return $this->belongsTo(Investment::class);
+    }
+
+    public function isInvestmentLinked(): bool
+    {
+        return in_array($this->type, self::INVESTMENT_TYPES, true);
     }
 
     public function tags(): BelongsToMany

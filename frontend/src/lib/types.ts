@@ -1,4 +1,4 @@
-export type TxType = "income" | "expense" | "transfer";
+export type TxType = "income" | "expense" | "transfer" | "invest" | "redeem";
 export type TxStatus = "paid" | "pending" | "overdue";
 
 export interface User {
@@ -66,6 +66,8 @@ export interface Transaction {
   transfer_account_id: number | null;
   category_id: number | null;
   recurring_transaction_id: number | null;
+  investment_id?: number | null;
+  investment?: { id: number; name: string; color: string } | null;
   installment_group: string | null;
   installment_number: number | null;
   installment_total: number | null;
@@ -115,6 +117,8 @@ export interface Goal {
   progress: number;
   monthly_needed: number | null;
   contributions?: { id: number; amount: number; date: string; note: string | null }[];
+  // Caixinhas vinculadas: o "já guardado" é o saldo delas.
+  linked_investments?: { id: number; name: string; institution: string | null; color: string; balance: number; is_estimated: boolean }[];
 }
 
 export interface Recurring {
@@ -163,4 +167,68 @@ export interface EvolutionPoint {
   income: number;
   expense: number;
   balance: number;
+}
+
+export type InvestmentType = "caixinha" | "cdb" | "tesouro" | "lci_lca" | "poupanca" | "previdencia" | "acoes" | "fii" | "cripto" | "outro";
+export type RateType = "cdi" | "prefixed" | "ipca" | "poupanca" | "variable";
+
+export interface Investment {
+  id: number;
+  name: string;
+  institution: string | null;
+  type: InvestmentType;
+  rate_type: RateType;
+  rate: number | null;
+  liquidity: "daily" | "maturity";
+  maturity_date: string | null;
+  color: string;
+  is_active: boolean;
+  notes: string | null;
+  balance: number;
+  invested: number;
+  total_deposits: number;
+  total_withdrawals: number;
+  yield: number;
+  yield_percent: number | null;
+  month_yield: number;
+  daily_yield: number | null;
+  projected_month_yield: number | null;
+  annual_rate: number | null;
+  last_reported_balance: number | null;
+  last_reported_at: string | null;
+  is_estimated: boolean;
+  goal_id: number | null;
+  goal: { id: number; name: string } | null;
+}
+
+export interface InvestmentMovement {
+  id: number;
+  investment_id?: number;
+  account_id: number | null;
+  account?: { id: number; name: string; color: string } | null;
+  investment?: { id: number; name: string; institution: string | null; color: string } | null;
+  type: "deposit" | "withdraw" | "balance";
+  amount: number;
+  date: string;
+  note: string | null;
+  is_opening: boolean;
+}
+
+export interface InvestmentSummary {
+  balance: number;
+  invested: number;
+  yield: number;
+  yield_percent: number | null;
+  month_yield: number;
+  daily_yield: number;
+  projected_month_yield: number;
+  count: number;
+}
+
+export interface MarketRates {
+  cdi: number;
+  selic: number;
+  ipca: number;
+  date: string | null;
+  source: "bcb" | "fallback" | string;
 }

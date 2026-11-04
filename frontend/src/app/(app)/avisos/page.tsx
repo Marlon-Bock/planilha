@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { cn, fmtDate } from "@/lib/format";
 import type { AppNotification } from "@/lib/types";
 import { Button, Card, EmptyState, PageHeader, Pagination, Select, Skeleton } from "@/components/ui";
+import { PushPrompt } from "@/components/push";
 
 const levelIcon = { danger: CircleX, warning: TriangleAlert, success: CircleCheck, info: Info };
 const levelStyle = {
@@ -49,6 +50,8 @@ export default function NotificationsPage() {
           <Button variant="outline" onClick={check} loading={checking}><RefreshCw className="h-4 w-4" /> Verificar agora</Button>
           {!!data?.unread && <Button variant="secondary" onClick={async () => { await api.post("/notifications/read-all"); refresh(); }}>Marcar todos como lidos</Button>}
         </>} />
+
+      <PushPrompt />
 
       <div className="mb-4 flex flex-wrap gap-2">
         <Select value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }} className="w-auto">
