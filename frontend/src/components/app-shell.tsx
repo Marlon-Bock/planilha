@@ -21,7 +21,6 @@ import { PopoverPanel, usePopover } from "@/components/controls";
 import { InstallButton } from "@/components/pwa";
 import { Heart, Pet, PetBuddy } from "@/components/cute";
 import { BottomNav, MoreSheet } from "@/components/mobile-nav";
-import { PrivacyToggle } from "@/components/privacy";
 
 const firstName = (n: string) => n.trim().split(/\s+/)[0];
 
@@ -149,7 +148,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <div className="flex-1" />
             <InstallButton variant="ghost" className="hidden px-3 lg:inline-flex" />
-            <PrivacyToggle />
             <span className="hidden lg:contents"><ThemeToggle /></span>
             <NotificationBell />
             <button onClick={() => openNew()} className="hidden h-10 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-brand-700 lg:inline-flex">

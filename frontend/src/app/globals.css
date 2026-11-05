@@ -50,13 +50,6 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Olhinho: esconde os valores (como nos apps de banco). Campos de digitação continuam visíveis. */
-html.privacy .tabular:not(input),
-html.privacy .recharts-yAxis .recharts-cartesian-axis-tick-value {
-  filter: blur(7px);
-  user-select: none;
-}
-
 /* Barras rolando de lado (carrosséis/chips) sem barra de rolagem visível. */
 .no-scrollbar {
   scrollbar-width: none;
