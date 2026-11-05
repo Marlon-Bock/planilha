@@ -348,15 +348,15 @@ function usePetReactions(kind: Critter["kind"]) {
  * Bichinho clicável: pula, fecha os olhinhos de felicidade, solta corações e fala.
  * 5 toques seguidos = chuva de corações.
  */
-export function Pet({ critter, pose = "sit", className, label, flip, hearts = 10, bubbleAlign = "center" }: {
-  critter: Critter; pose?: Pose; className?: string; label?: string; flip?: boolean; hearts?: number; bubbleAlign?: "center" | "left" | "right";
+export function Pet({ critter, pose = "sit", className, label, flip, hearts = 10, bubbleAlign = "center", onPet }: {
+  critter: Critter; pose?: Pose; className?: string; label?: string; flip?: boolean; hearts?: number; bubbleAlign?: "center" | "left" | "right"; onPet?: () => void;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const { boing, happy, bubble, react } = usePetReactions(critter.kind);
   useLookAt(ref);
 
   return (
-    <button ref={ref} type="button" onClick={(e) => react(e, hearts)}
+    <button ref={ref} type="button" onClick={(e) => { react(e, hearts); onPet?.(); }}
       aria-label={label ?? (critter.kind === "cat" ? "Gatinho" : "Cachorrinho")} title="Faz um carinho 💕"
       className={cn("pet relative inline-block shrink-0 touch-manipulation outline-none select-none", happy && "pet-happy", className)}>
       <span key={boing} className={cn("block h-full w-full transition-transform hover:-translate-y-0.5", boing > 0 && "pet-boing")}>
@@ -391,10 +391,19 @@ export function CatCouple({ className }: { className?: string }) {
 export function SleepyCat({ className, seed = "" }: { className?: string; seed?: string }) {
   const sleepers: Critter[] = [{ kind: "cat", color: "cream" }, { kind: "dog", color: "caramel" }, { kind: "cat", color: "gray" }, { kind: "dog", color: "white" }];
   const hash = [...seed].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+  // Tocou: acorda, senta e fica um tempinho acordado; depois volta a dormir.
+  const [awake, setAwake] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const wake = () => {
+    setAwake(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setAwake(false), 8000);
+  };
   return (
     <div className={cn("relative", className)}>
-      <Pet critter={sleepers[hash % sleepers.length]} pose="sleep" className="h-20 w-24" hearts={6} />
-      <span className="pointer-events-none absolute -top-1 right-0 text-sm font-bold text-brand-400 animate-bob">z<span className="text-xs">z</span></span>
+      <Pet critter={sleepers[hash % sleepers.length]} pose={awake ? "sit" : "sleep"} className="h-20 w-24" hearts={6} onPet={wake} />
+      {!awake && <span className="pointer-events-none absolute -top-1 right-0 text-sm font-bold text-brand-400 animate-bob">z<span className="text-xs">z</span></span>}
     </div>
   );
 }
