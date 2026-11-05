@@ -106,6 +106,15 @@ export default function ProfilePage() {
           </form>
         </Card>
 
+        <Card title="Alterar senha">
+          <form onSubmit={savePassword} className="space-y-4">
+            <Field label="Senha atual" error={pwdErrors.current_password}><Input placeholder="Digite sua senha atual" type="password" autoComplete="current-password" value={pwd.current_password} onChange={(e) => setPwd({ ...pwd, current_password: e.target.value })} /></Field>
+            <Field label="Nova senha" error={pwdErrors.password} hint="Mínimo de 8 caracteres, com letras e números"><Input placeholder="Mínimo de 8 caracteres" type="password" autoComplete="new-password" value={pwd.password} onChange={(e) => setPwd({ ...pwd, password: e.target.value })} /></Field>
+            <Field label="Confirmar nova senha"><Input placeholder="Repita a nova senha" type="password" autoComplete="new-password" value={pwd.password_confirmation} onChange={(e) => setPwd({ ...pwd, password_confirmation: e.target.value })} /></Field>
+            <Button type="submit" variant="secondary">Alterar senha</Button>
+          </form>
+        </Card>
+
         <PushSettingsCard />
 
         <Card title="Nossos bichinhos 🐾">
@@ -119,15 +128,6 @@ export default function ProfilePage() {
             <li>O bichinho que fica no canto da tela dá para <strong className="text-slate-700 dark:text-slate-300">arrastar</strong> para onde quiser. <strong className="text-slate-700 dark:text-slate-300">Toque duas vezes</strong> nele para trocar de bichinho.</li>
             <li>Se ninguém brincar com ele por um tempo, ele tira uma soneca 💤</li>
           </ul>
-        </Card>
-
-        <Card title="Alterar senha">
-          <form onSubmit={savePassword} className="space-y-4">
-            <Field label="Senha atual" error={pwdErrors.current_password}><Input placeholder="Digite sua senha atual" type="password" autoComplete="current-password" value={pwd.current_password} onChange={(e) => setPwd({ ...pwd, current_password: e.target.value })} /></Field>
-            <Field label="Nova senha" error={pwdErrors.password} hint="Mínimo de 8 caracteres, com letras e números"><Input placeholder="Mínimo de 8 caracteres" type="password" autoComplete="new-password" value={pwd.password} onChange={(e) => setPwd({ ...pwd, password: e.target.value })} /></Field>
-            <Field label="Confirmar nova senha"><Input placeholder="Repita a nova senha" type="password" autoComplete="new-password" value={pwd.password_confirmation} onChange={(e) => setPwd({ ...pwd, password_confirmation: e.target.value })} /></Field>
-            <Button type="submit" variant="secondary">Alterar senha</Button>
-          </form>
         </Card>
 
         <Card title="Zona de perigo" className="border-rose-200 lg:col-span-2 dark:border-rose-500/30">

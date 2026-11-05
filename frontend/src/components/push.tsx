@@ -175,8 +175,8 @@ export function PushSettingsCard() {
   };
 
   return (
-    <Card title={<span className="flex items-center gap-2"><BellRing className="h-4 w-4 text-brand-500" /> Notificações no celular e no PC</span>} className="lg:col-span-2">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card title={<span className="flex items-center gap-2"><BellRing className="h-4 w-4 text-brand-500" /> Notificações no celular e no PC</span>}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start">
         <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
           <p>Receba os avisos (contas a vencer, vencidas, orçamento estourado, metas atingidas) <strong>mesmo com o app fechado</strong>.</p>
           {HELP[status] && <p className="text-xs text-amber-700 dark:text-amber-400">{HELP[status]}</p>}
@@ -204,8 +204,8 @@ export function PushSettingsCard() {
             {data.devices.map((d) => (
               <li key={d.id} className="group flex items-center gap-3 py-2 text-sm">
                 {/Android|iPhone/.test(d.device ?? "") ? <Smartphone className="h-4 w-4 text-slate-400" /> : <Laptop className="h-4 w-4 text-slate-400" />}
-                <span className="flex-1 text-slate-700 dark:text-slate-200">{d.device ?? "Aparelho"}</span>
-                <span className="text-xs text-slate-400">{d.last_used_at ? `último aviso ${fmtDate(d.last_used_at, "dd/MM HH:mm")}` : `desde ${fmtDate(d.created_at)}`}</span>
+                <span className="min-w-0 flex-1 truncate text-slate-700 dark:text-slate-200">{d.device ?? "Aparelho"}</span>
+                <span className="shrink-0 text-xs text-slate-400">{d.last_used_at ? `último aviso ${fmtDate(d.last_used_at, "dd/MM HH:mm")}` : `desde ${fmtDate(d.created_at)}`}</span>
                 <button onClick={() => removeDevice(d.id)} className="rounded p-1 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-rose-600" aria-label="Remover aparelho">
                   <Trash2 className="h-4 w-4" />
                 </button>
