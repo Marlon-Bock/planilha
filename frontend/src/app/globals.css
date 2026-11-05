@@ -232,6 +232,15 @@ body {
   animation: bubble 1.8s ease-out forwards;
 }
 
+/* Capa do Dashboard: zoom bem lento, tipo porta-retrato digital. */
+@keyframes cover-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.07); }
+}
+.cover-zoom {
+  animation: cover-zoom 22s ease-in-out infinite alternate;
+}
+
 /* Quem pede menos movimento no sistema: tudo parado. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

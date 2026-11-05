@@ -39,6 +39,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'together_since' => 'date:Y-m-d',
+            'cover_position' => 'integer',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'alert_days_before' => 'integer',

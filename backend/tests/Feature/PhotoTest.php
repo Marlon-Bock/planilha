@@ -66,6 +66,19 @@ class PhotoTest extends TestCase
         $this->assertCount(0, Storage::disk('uploads')->allFiles());
     }
 
+    public function test_cover_position_is_saved_and_reset_on_new_cover(): void
+    {
+        Storage::fake('uploads');
+        $user = User::factory()->create();
+        $this->actingAs($user)->post('/api/profile/photos/cover', ['photo' => UploadedFile::fake()->image('capa.jpg', 1200, 800)], ['Accept' => 'application/json'])->assertOk();
+
+        $this->patchJson('/api/profile/photos/cover/position', ['position' => 22])->assertOk()->assertJsonPath('user.cover_position', 22);
+        $this->patchJson('/api/profile/photos/cover/position', ['position' => 150])->assertStatus(422);
+
+        $this->post('/api/profile/photos/cover', ['photo' => UploadedFile::fake()->image('outra.jpg', 1200, 800)], ['Accept' => 'application/json'])
+            ->assertOk()->assertJsonPath('user.cover_position', null);
+    }
+
     public function test_guest_cannot_see_photos(): void
     {
         $this->getJson('/api/profile/photos/avatar')->assertUnauthorized();

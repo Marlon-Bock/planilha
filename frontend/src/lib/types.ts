@@ -8,6 +8,7 @@ export interface User {
   together_since: string | null;
   avatar_url: string | null;
   cover_url: string | null;
+  cover_position: number | null;
   background_url: string | null;
   email: string;
   role: "admin" | "user";

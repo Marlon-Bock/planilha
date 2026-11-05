@@ -7,7 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/components/auth";
 import { Heart, heartRain, Pet } from "@/components/cute";
-import { Avatar } from "@/components/photos";
+import { Avatar, COVER_DEFAULT_POSITION } from "@/components/photos";
 import { cn } from "@/lib/format";
 
 const firstName = (n: string) => n.trim().split(/\s+/)[0];
@@ -51,9 +51,27 @@ export function CoupleGreeting() {
 
   if (!user) return null;
   const name = firstName(user.name);
+  // Com capa: foto ocupa o card todo e o texto fica por cima, em branco, sobre um degradê.
+  const photo = !!user.cover_url;
 
   return (
-    <section className="relative mt-11 mb-6 overflow-visible rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 via-white to-violet-50 px-5 py-4 shadow-sm sm:mt-12 dark:border-brand-500/20 dark:from-brand-500/10 dark:via-slate-900 dark:to-violet-500/10">
+    <section className={cn(
+      "relative mt-11 mb-6 rounded-2xl shadow-sm sm:mt-12",
+      photo
+        ? "flex min-h-80 flex-col justify-end shadow-lg shadow-brand-900/10 lg:min-h-96"
+        : "border border-brand-100 bg-gradient-to-r from-brand-50 via-white to-violet-50 px-5 py-4 dark:border-brand-500/20 dark:from-brand-500/10 dark:via-slate-900 dark:to-violet-500/10",
+    )}>
+      {photo && (
+        <div className="absolute inset-0 overflow-hidden rounded-2xl bg-slate-200 dark:bg-slate-800">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={user.cover_url!} alt="" className="cover-zoom h-full w-full object-cover"
+            style={{ objectPosition: `50% ${user.cover_position ?? COVER_DEFAULT_POSITION}%` }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 via-35% to-transparent to-65%" />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-900/30 to-transparent" />
+          <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5 ring-inset" />
+        </div>
+      )}
+
       {/* Bichinhos espiando por cima do card (clique = carinho) */}
       <div className="absolute right-3 -top-[38px] flex items-end gap-0.5 sm:right-6 sm:-top-[46px]">
         <Pet critter={{ kind: "dog", color: "caramel" }} pose="peek" className="h-10 w-[60px] sm:h-12 sm:w-[74px]" hearts={12} />
@@ -62,47 +80,39 @@ export function CoupleGreeting() {
         <Pet critter={{ kind: "cat", color: "ginger" }} pose="peek" className="h-10 w-[60px] sm:h-12 sm:w-[74px]" hearts={14} bubbleAlign="right" />
       </div>
 
-      {/* Capa (foto escolhida no Perfil) */}
-      {user.cover_url && (
-        <div className="-mx-5 -mt-4 mb-3 h-32 overflow-hidden rounded-t-[15px] sm:h-48">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={user.cover_url} alt="" className="h-full w-full object-cover" />
-        </div>
-      )}
-
-      <div className={cn("flex items-center gap-3", !user.cover_url && "sm:pr-48")}>
+      <div className={cn("relative flex items-center gap-3 sm:gap-4", photo ? "flex-col items-start px-4 pt-24 pb-4 sm:flex-row sm:items-center sm:px-7 sm:pb-6" : "sm:pr-48")}>
         {user.avatar_url && (
-          <Avatar user={user} className={cn("h-12 w-12 ring-4 ring-white sm:h-16 sm:w-16 dark:ring-slate-900", user.cover_url && "-mt-10 self-start sm:-mt-12")} />
+          <Avatar user={user} className={cn("h-12 w-12 sm:h-16 sm:w-16", photo ? "ring-[3px] ring-white/90 shadow-lg" : "ring-4 ring-white dark:ring-slate-900")} />
         )}
-      <div className="flex min-w-0 flex-col gap-1">
-        <p className="text-lg font-semibold text-slate-900 dark:text-white">
-          {greeting(now)}, {name}! <span aria-hidden>💕</span>
-        </p>
-
-        {info ? (
-          info.isMonthiversary ? (
-            <p className="flex items-center gap-1.5 text-sm font-medium text-brand-700 dark:text-brand-300">
-              <Sparkles className="h-4 w-4" />
-              {info.isAnniversary
-                ? `Feliz aniversário de namoro! ${info.years} ano${info.years > 1 ? "s" : ""} juntos com ${firstName(user.partner_name!)} 🎉`
-                : `Hoje é mesversário! ${info.months} ${info.months > 1 ? "meses" : "mês"} juntos com ${firstName(user.partner_name!)} 🎉`}
-            </p>
-          ) : (
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              Você e <strong className="text-brand-700 dark:text-brand-300">{firstName(user.partner_name!)}</strong> estão juntos há{" "}
-              <strong className="tabular">{info.days.toLocaleString("pt-BR")} dias</strong>
-              {info.months > 0 && <> ({info.years > 0 ? `${info.years} ano${info.years > 1 ? "s" : ""} e ` : ""}{info.months % 12} {info.months % 12 === 1 ? "mês" : "meses"})</>}.
-              {" "}Próximo mesversário {info.daysToNext === 1 ? "é amanhã" : `em ${info.daysToNext} dias`}
-              <span className="text-slate-400"> · {format(info.next, "dd 'de' MMMM", { locale: ptBR })}</span>
-            </p>
-          )
-        ) : (
-          <p className="text-sm text-slate-600 dark:text-slate-300">
-            Organizar o dinheiro a dois fica mais fácil.{" "}
-            <Link href="/perfil" className="font-medium text-brand-600 hover:underline dark:text-brand-400">Conte quem é seu amor e desde quando estão juntos →</Link>
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className={cn("font-semibold", photo ? "text-xl text-white drop-shadow sm:text-2xl" : "text-lg text-slate-900 dark:text-white")}>
+            {greeting(now)}, {name}! <span aria-hidden>💕</span>
           </p>
-        )}
-      </div>
+
+          {info ? (
+            info.isMonthiversary ? (
+              <p className={cn("flex items-center gap-1.5 text-sm font-medium", photo ? "text-brand-100 drop-shadow" : "text-brand-700 dark:text-brand-300")}>
+                <Sparkles className="h-4 w-4" />
+                {info.isAnniversary
+                  ? `Feliz aniversário de namoro! ${info.years} ano${info.years > 1 ? "s" : ""} juntos com ${firstName(user.partner_name!)} 🎉`
+                  : `Hoje é mesversário! ${info.months} ${info.months > 1 ? "meses" : "mês"} juntos com ${firstName(user.partner_name!)} 🎉`}
+              </p>
+            ) : (
+              <p className={cn("text-sm", photo ? "text-white/90 drop-shadow" : "text-slate-600 dark:text-slate-300")}>
+                Você e <strong className={photo ? "text-brand-200" : "text-brand-700 dark:text-brand-300"}>{firstName(user.partner_name!)}</strong> estão juntos há{" "}
+                <strong className="tabular">{info.days.toLocaleString("pt-BR")} dias</strong>
+                {info.months > 0 && <> ({info.years > 0 ? `${info.years} ano${info.years > 1 ? "s" : ""} e ` : ""}{info.months % 12} {info.months % 12 === 1 ? "mês" : "meses"})</>}.
+                {" "}Próximo mesversário {info.daysToNext === 1 ? "é amanhã" : `em ${info.daysToNext} dias`}
+                <span className={photo ? "text-white/65" : "text-slate-400"}> · {format(info.next, "dd 'de' MMMM", { locale: ptBR })}</span>
+              </p>
+            )
+          ) : (
+            <p className={cn("text-sm", photo ? "text-white/90 drop-shadow" : "text-slate-600 dark:text-slate-300")}>
+              Organizar o dinheiro a dois fica mais fácil.{" "}
+              <Link href="/perfil" className={cn("font-medium hover:underline", photo ? "text-brand-200" : "text-brand-600 dark:text-brand-400")}>Conte quem é seu amor e desde quando estão juntos →</Link>
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );

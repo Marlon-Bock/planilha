@@ -42,9 +42,11 @@ const initialsOf = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 
 
 /** Foto de perfil redonda; sem foto, mostra as iniciais. */
 export function Avatar({ user, className }: { user: User; className?: string }) {
-  return user.avatar_url ? (
+  // Se a foto não carregar (arquivo sumiu), volta para as iniciais.
+  const [broken, setBroken] = useState<string | null>(null);
+  return user.avatar_url && broken !== user.avatar_url ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={user.avatar_url} alt="" className={cn("shrink-0 rounded-full object-cover", className)} />
+    <img src={user.avatar_url} alt="" onError={() => setBroken(user.avatar_url)} className={cn("shrink-0 rounded-full object-cover", className)} />
   ) : (
     <span className={cn("flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 font-semibold text-white", className)}>
       {initialsOf(user.name)}
@@ -65,7 +67,78 @@ export function AppBackground() {
   );
 }
 
-function PhotoTile({ slot, title, hint, max, url }: { slot: PhotoSlot; title: string; hint: string; max: number; url: string | null }) {
+/** Enquadramento padrão da capa: um pouco acima do meio, onde costumam ficar os rostos. */
+export const COVER_DEFAULT_POSITION = 35;
+
+const clamp = (n: number) => Math.min(100, Math.max(0, n));
+
+/** Prévia da capa: arraste para cima/baixo para escolher a parte da foto que aparece. */
+function CoverFramer({ url, position, busy }: { url: string; position: number; busy: boolean }) {
+  const { setUser } = useAuth();
+  const box = useRef<HTMLDivElement>(null);
+  const img = useRef<HTMLImageElement>(null);
+  const [pos, setPos] = useState(position);
+  const [saved, setSaved] = useState(position);
+  // Valor novo do servidor (outra foto, outro aparelho): adota.
+  if (saved !== position) { setSaved(position); setPos(position); }
+  const [range, setRange] = useState(0);
+  const drag = useRef<{ y: number; start: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  // Quanto a foto "sobra" na vertical dentro do quadro (0 = não dá para mover).
+  const measure = () => {
+    const b = box.current, i = img.current;
+    if (!b || !i?.naturalWidth) return 0;
+    const r = Math.max(0, (b.clientWidth * i.naturalHeight) / i.naturalWidth - b.clientHeight);
+    setRange(r);
+    return r;
+  };
+
+  const save = async (value: number) => {
+    if (value === position) return;
+    try {
+      const { data } = await api.patch<{ user: User }>("/profile/photos/cover/position", { position: value });
+      setUser(data.user);
+      toast.success("Enquadramento salvo 📸");
+    } catch (err) {
+      setPos(position);
+      toast.error(parseError(err).message);
+    }
+  };
+
+  return (
+    <div ref={box}
+      onPointerDown={(e) => {
+        if (measure() < 2) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
+        drag.current = { y: e.clientY, start: pos };
+        setDragging(true);
+      }}
+      onPointerMove={(e) => {
+        const d = drag.current;
+        if (d) setPos(clamp(d.start - ((e.clientY - d.y) / range) * 100));
+      }}
+      onPointerUp={() => {
+        if (!drag.current) return;
+        drag.current = null;
+        setDragging(false);
+        void save(Math.round(pos));
+      }}
+      className={cn("relative aspect-[11/4] w-full touch-none overflow-hidden rounded-xl bg-slate-100 select-none dark:bg-slate-800", range >= 2 && (dragging ? "cursor-grabbing" : "cursor-grab"))}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img ref={img} src={url} alt="" draggable={false} onLoad={measure}
+        className="pointer-events-none h-full w-full object-cover" style={{ objectPosition: `50% ${pos}%` }} />
+      {range >= 2 && !busy && (
+        <span className={cn("pointer-events-none absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-slate-950/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur transition-opacity", dragging && "opacity-0")}>
+          ↕ Arraste para ajustar
+        </span>
+      )}
+      {busy && <span className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs font-medium text-brand-600 dark:bg-slate-900/70">Enviando…</span>}
+    </div>
+  );
+}
+
+function PhotoTile({ slot, title, hint, max, url, position }: { slot: PhotoSlot; title: string; hint: string; max: number; url: string | null; position?: number | null }) {
   const { setUser } = useAuth();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"up" | "del" | null>(null);
@@ -105,6 +178,9 @@ function PhotoTile({ slot, title, hint, max, url }: { slot: PhotoSlot; title: st
 
   return (
     <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-slate-100 p-3 dark:border-slate-800">
+      {slot === "cover" && url ? (
+        <CoverFramer url={url} position={position ?? COVER_DEFAULT_POSITION} busy={busy === "up"} />
+      ) : (
       <button type="button" onClick={() => input.current?.click()} disabled={!!busy}
         className={cn("group relative overflow-hidden border-2 border-dashed border-brand-200 bg-brand-50/60 transition hover:border-brand-400 dark:border-brand-500/30 dark:bg-brand-500/5", url && "border-solid border-transparent", preview)}
         aria-label={url ? `Trocar ${title.toLowerCase()}` : `Escolher ${title.toLowerCase()}`}>
@@ -118,6 +194,7 @@ function PhotoTile({ slot, title, hint, max, url }: { slot: PhotoSlot; title: st
         )}
         {busy === "up" && <span className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs font-medium text-brand-600 dark:bg-slate-900/70">Enviando…</span>}
       </button>
+      )}
       <div className="min-w-0">
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</p>
         <p className="text-xs text-slate-500">{hint}</p>
@@ -144,7 +221,7 @@ export function PhotosCard({ className }: { className?: string }) {
   return (
     <Card title="Nossas fotos 📸" className={className}>
       <div className="grid gap-3 sm:grid-cols-3">
-        {SLOTS.map((s) => <PhotoTile key={s.slot} slot={s.slot} title={s.title} hint={s.hint} max={s.max} url={user[s.key] ?? null} />)}
+        {SLOTS.map((s) => <PhotoTile key={s.slot} slot={s.slot} title={s.title} hint={s.hint} max={s.max} url={user[s.key] ?? null} position={s.slot === "cover" ? user.cover_position : undefined} />)}
       </div>
       <p className="mt-3 text-xs text-slate-500">As fotos ficam guardadas no servidor do app e só aparecem para quem está logado nesta conta.</p>
     </Card>

@@ -45,10 +45,21 @@ class PhotoController extends Controller
 
         $column = self::SLOTS[$slot];
         $old = $user->{$column};
-        $user->forceFill([$column => $path])->save();
+        // Capa nova volta ao enquadramento padrão.
+        $user->forceFill([$column => $path] + ($slot === 'cover' ? ['cover_position' => null] : []))->save();
         if ($old && $old !== $path) {
             Storage::disk('uploads')->delete($old);
         }
+
+        return response()->json(['user' => $user->fresh()]);
+    }
+
+    /** Enquadramento da capa (arrastar a foto no Perfil). */
+    public function position(Request $request): JsonResponse
+    {
+        $data = $request->validate(['position' => ['required', 'integer', 'between:0,100']]);
+        $user = $request->user();
+        $user->forceFill(['cover_position' => $data['position']])->save();
 
         return response()->json(['user' => $user->fresh()]);
     }

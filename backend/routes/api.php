@@ -27,6 +27,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::put('profile', [AuthController::class, 'updateProfile']);
     Route::put('profile/password', [AuthController::class, 'updatePassword']);
     Route::delete('profile', [AuthController::class, 'destroyAccount']);
+    Route::patch('profile/photos/cover/position', [PhotoController::class, 'position']);
     Route::get('profile/photos/{slot}', [PhotoController::class, 'show'])->whereIn('slot', PhotoController::SLOTS_LIST);
     Route::post('profile/photos/{slot}', [PhotoController::class, 'store'])->whereIn('slot', PhotoController::SLOTS_LIST);
     Route::delete('profile/photos/{slot}', [PhotoController::class, 'destroy'])->whereIn('slot', PhotoController::SLOTS_LIST);
