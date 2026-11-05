@@ -19,7 +19,7 @@ import { TransactionForm, type TxDefaults } from "@/components/transaction-form"
 import { Spinner } from "@/components/ui";
 import { PopoverPanel, usePopover } from "@/components/controls";
 import { InstallButton } from "@/components/pwa";
-import { burstFrom, Cat, Heart } from "@/components/cute";
+import { Heart, Pet, PetBuddy } from "@/components/cute";
 import { BottomNav, MoreSheet } from "@/components/mobile-nav";
 import { PrivacyToggle } from "@/components/privacy";
 
@@ -120,11 +120,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         })}
       </nav>
       <div className="relative border-t border-slate-200 p-3 dark:border-slate-800">
-        {/* Gatinho espiando por cima do cartão do usuário (clique = carinho). */}
-        <button type="button" onClick={(e) => burstFrom(e, 8)} aria-label="Gatinho" title="Miau 💕"
-          className="absolute -top-[42px] right-5 hidden h-11 w-16 cute:block">
-          <Cat color="ginger" pose="peek" className="h-full w-full transition-transform hover:-translate-y-1" />
-        </button>
+        {/* Gatinho e cachorrinho espiando por cima do cartão do usuário (clique = carinho). */}
+        <div className="absolute -top-[42px] right-4 flex items-end gap-1">
+          <Pet critter={{ kind: "dog", color: "choco" }} pose="peek" className="h-11 w-16" hearts={8} bubbleAlign="right" />
+          <Pet critter={{ kind: "cat", color: "ginger" }} pose="peek" className="h-11 w-16" hearts={8} bubbleAlign="right" />
+        </div>
         <UserMenu user={user} onLogout={logout} />
       </div>
     </div>
@@ -172,6 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           { href: "/perfil", label: "Meu perfil", icon: UserCog },
         ]} />
       <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} transaction={editing} defaults={defaults} />
+      <PetBuddy />
     </TxFormContext.Provider>
   );
 }

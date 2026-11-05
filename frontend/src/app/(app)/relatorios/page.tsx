@@ -61,12 +61,12 @@ export default function ReportsPage() {
               </button>
             );
           })}
-          <div className="flex items-center gap-2">
-            <DatePicker value={from} onChange={(v) => setFrom(v)} className="h-9 w-44" />
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <DatePicker value={from} onChange={(v) => setFrom(v)} className="h-9 min-w-0 flex-1 sm:w-44 sm:flex-none" />
             <span className="text-slate-400">até</span>
-            <DatePicker value={to} onChange={(v) => setTo(v)} className="h-9 w-44" />
+            <DatePicker value={to} onChange={(v) => setTo(v)} className="h-9 min-w-0 flex-1 sm:w-44 sm:flex-none" />
           </div>
-          <div className="w-48"><MultiSelect label="Todas as contas" options={accountsData?.data ?? []} value={accountIds} onChange={setAccountIds} /></div>
+          <div className="w-full sm:w-48"><MultiSelect label="Todas as contas" options={accountsData?.data ?? []} value={accountIds} onChange={setAccountIds} /></div>
         </div>
       </Card>
 
@@ -102,8 +102,8 @@ export default function ReportsPage() {
                   <li key={t.id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
                     <span className="w-5 text-xs text-slate-400">{i + 1}</span>
                     <Dot color={t.category?.color} />
-                    <span className="min-w-0 flex-1"><span className="block truncate text-slate-800 dark:text-slate-100">{t.description}</span><span className="text-xs text-slate-500">{fmtDate(t.date)} · {t.category?.name ?? "Sem categoria"}</span></span>
-                    <span className="tabular font-medium text-slate-900 dark:text-white">{money(t.amount)}</span>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-slate-800 dark:text-slate-100">{t.description}</span><span className="block truncate text-xs text-slate-500">{fmtDate(t.date)} · {t.category?.name ?? "Sem categoria"}</span></span>
+                    <span className="tabular shrink-0 font-medium text-slate-900 dark:text-white">{money(t.amount)}</span>
                   </li>
                 ))}
               </ul>

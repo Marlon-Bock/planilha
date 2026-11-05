@@ -145,14 +145,101 @@ html.privacy .recharts-yAxis .recharts-cartesian-axis-tick-value {
   animation: tail 1.8s ease-in-out infinite;
 }
 
-/* Sem modo fofinho, ou para quem pede menos movimento: tudo parado. */
-html:not(.cute) .cat-eye,
-html:not(.cute) .cat-tail,
-html:not(.cute) [class*="animate-heartbeat"],
-html:not(.cute) [class*="animate-bob"],
-html:not(.cute) [class*="animate-float-slow"] {
-  animation: none !important;
+/* ------------------------------ Bichinhos ------------------------------ */
+
+/* Rabinho de cachorro abanando (mais rápido quando está feliz). */
+@keyframes wag {
+  0%, 100% { transform: rotate(-16deg); }
+  50% { transform: rotate(20deg); }
 }
+.dog-tail {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: wag 0.5s ease-in-out infinite;
+}
+.pet-happy .dog-tail { animation-duration: 0.16s; }
+.pet-happy .cat-tail { animation-duration: 0.45s; }
+
+/* Linguinha que balança. */
+@keyframes tongue {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.25); }
+}
+.dog-tongue {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: tongue 0.9s ease-in-out infinite;
+}
+
+/* Orelhinhas que balançam com o carinho. */
+@keyframes ear-l {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(14deg); }
+}
+@keyframes ear-r {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(-14deg); }
+}
+.dog-ear-l, .dog-ear-r, .cat-ears { transform-box: fill-box; }
+.dog-ear-l { transform-origin: 100% 0%; }
+.dog-ear-r { transform-origin: 0% 0%; }
+.cat-ears { transform-origin: 50% 100%; }
+.pet-happy .dog-ear-l { animation: ear-l 0.28s ease-in-out 3; }
+.pet-happy .dog-ear-r { animation: ear-r 0.28s ease-in-out 3; }
+@keyframes ear-twitch {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.06, 0.92); }
+}
+.pet-happy .cat-ears { animation: ear-twitch 0.3s ease-in-out 2; }
+
+/* Olhinhos seguem o dedo/mouse; felizes viram ^ ^. */
+.pet-look {
+  transform: translate(calc(var(--lx, 0) * 2.4px), calc(var(--ly, 0) * 2px));
+  transition: transform 0.15s ease-out;
+}
+.eyes-happy { display: none; }
+.pet-happy .eyes-happy { display: inline; }
+.pet-happy .eyes-open { display: none; }
+
+/* Pulinho "boing" ao tocar. */
+@keyframes boing {
+  0% { transform: translateY(0) scale(1, 1); }
+  18% { transform: translateY(0) scale(1.14, 0.84); }
+  45% { transform: translateY(-16px) scale(0.92, 1.1); }
+  70% { transform: translateY(0) scale(1.07, 0.93); }
+  85% { transform: translateY(0) scale(0.98, 1.02); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.pet-boing {
+  transform-origin: 50% 100%;
+  animation: boing 0.55s cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+
+/* Balançando pendurado enquanto é arrastado. */
+@keyframes dangle {
+  0%, 100% { transform: rotate(-12deg) scale(1.08); }
+  50% { transform: rotate(12deg) scale(1.08); }
+}
+.pet-dragging {
+  transform-origin: 50% 10%;
+  animation: dangle 0.6s ease-in-out infinite;
+}
+
+/* Balão de fala. */
+@keyframes bubble {
+  0% { opacity: 0; transform: translateY(6px) scale(0.6); }
+  14% { opacity: 1; transform: translateY(0) scale(1.08); }
+  22% { transform: translateY(0) scale(1); }
+  85% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-6px) scale(0.95); }
+}
+.pet-bubble {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  animation: bubble 1.8s ease-out forwards;
+}
+
+/* Quem pede menos movimento no sistema: tudo parado. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

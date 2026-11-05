@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { api, parseError, type FieldErrors } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/components/auth";
-import { Badge, Button, Card, ConfirmDialog, DatePicker, Field, Input, PageHeader, Select, Toggle } from "@/components/ui";
-import { Cat, Heart, useCuteMode } from "@/components/cute";
+import { Badge, Button, Card, ConfirmDialog, DatePicker, Field, Input, PageHeader, Select } from "@/components/ui";
+import { BUDDIES, Heart, Pet } from "@/components/cute";
 import { PushSettingsCard } from "@/components/push";
 
 export default function ProfilePage() {
@@ -16,7 +16,6 @@ export default function ProfilePage() {
     name: user?.name ?? "", email: user?.email ?? "", currency: user?.currency ?? "BRL", alert_days_before: user?.alert_days_before ?? 3,
     partner_name: user?.partner_name ?? "", together_since: user?.together_since ?? "",
   }));
-  const [cute, setCute] = useCuteMode();
   const [pwd, setPwd] = useState({ current_password: "", password: "", password_confirmation: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [pwdErrors, setPwdErrors] = useState<FieldErrors>({});
@@ -109,16 +108,17 @@ export default function ProfilePage() {
 
         <PushSettingsCard />
 
-        <Card title="Aparência">
-          <div className="flex items-center gap-4">
-            <Cat color="ginger" className="h-16 w-16 shrink-0" />
-            <div className="flex-1 space-y-2">
-              <Toggle checked={cute} onChange={setCute} label="Modo fofinho" />
-              <p className="text-xs text-slate-500">
-                Gatinhos, corações e animações pelo sistema. Fica salvo só neste dispositivo. Quem ativou “reduzir movimento” no sistema vê tudo sem animação.
-              </p>
-            </div>
+        <Card title="Nossos bichinhos 🐾">
+          <div className="flex flex-wrap items-end justify-center gap-x-2 gap-y-4 pt-6">
+            {BUDDIES.map((b) => (
+              <Pet key={`${b.kind}-${b.color}`} critter={b} className="h-16 w-16 sm:h-20 sm:w-20" />
+            ))}
           </div>
+          <ul className="mt-4 space-y-1 text-xs text-slate-500">
+            <li><strong className="text-slate-700 dark:text-slate-300">Toque</strong> num bichinho para fazer carinho. Cinco toques seguidos fazem chover corações.</li>
+            <li>O bichinho que fica no canto da tela dá para <strong className="text-slate-700 dark:text-slate-300">arrastar</strong> para onde quiser. <strong className="text-slate-700 dark:text-slate-300">Toque duas vezes</strong> nele para trocar de bichinho.</li>
+            <li>Se ninguém brincar com ele por um tempo, ele tira uma soneca 💤</li>
+          </ul>
         </Card>
 
         <Card title="Alterar senha">

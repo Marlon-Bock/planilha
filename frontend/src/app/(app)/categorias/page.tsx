@@ -48,11 +48,11 @@ export default function CategoriesPage() {
                     <CategoryIcon icon={c.icon} color={c.color} />
                     <div className="min-w-0 flex-1">
                       <TxLink filters={{ category_ids: [c.id] }} className="block truncate text-sm font-medium text-slate-800 hover:text-brand-600 dark:text-slate-100">{c.name}</TxLink>
-                      <p className="text-xs text-slate-500">{c.transactions_count ?? 0} lançamento(s)</p>
+                      <p className="truncate text-xs text-slate-500">{c.transactions_count ?? 0} lançamento(s)</p>
                     </div>
                     {c.is_archived && <Badge>Arquivada</Badge>}
-                    <span className="tabular text-sm text-slate-600 dark:text-slate-300">{money(c.month_total)}</span>
-                    <div className="flex opacity-50 group-hover:opacity-100">
+                    <span className="tabular shrink-0 text-sm text-slate-600 dark:text-slate-300">{money(c.month_total)}</span>
+                    <div className="flex shrink-0 opacity-50 group-hover:opacity-100">
                       <button className="rounded-md p-1.5 text-slate-400 hover:text-slate-700" onClick={() => open(type, c)} aria-label="Editar"><Pencil className="h-4 w-4" /></button>
                       <button className="rounded-md p-1.5 text-slate-400 hover:text-rose-600" onClick={() => setToDelete(c)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></button>
                     </div>

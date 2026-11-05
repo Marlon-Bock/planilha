@@ -6,7 +6,7 @@ import { addMonths, differenceInCalendarDays, differenceInCalendarMonths, format
 import { ptBR } from "date-fns/locale";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/components/auth";
-import { burstFrom, Cat, Heart, heartRain } from "@/components/cute";
+import { Heart, heartRain, Pet } from "@/components/cute";
 
 const firstName = (n: string) => n.trim().split(/\s+/)[0];
 
@@ -51,14 +51,14 @@ export function CoupleGreeting() {
   const name = firstName(user.name);
 
   return (
-    <section className="relative mt-8 mb-6 overflow-visible rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 via-white to-violet-50 px-5 py-4 shadow-sm dark:border-brand-500/20 dark:from-brand-500/10 dark:via-slate-900 dark:to-violet-500/10">
-      {/* Gatinhos espiando por cima do card */}
-      <button type="button" onClick={(e) => burstFrom(e, 14)} aria-label="Gatinhos do casal" title="Faz um carinho 💕"
-        className="absolute -top-[46px] right-6 hidden items-end gap-0.5 cute:flex">
-        <Cat color="gray" pose="peek" className="h-12 w-[74px] transition-transform hover:-translate-y-1" />
-        <Heart className="mb-8 h-4 w-4 text-brand-500 animate-heartbeat" />
-        <Cat color="ginger" pose="peek" className="h-12 w-[74px] transition-transform hover:-translate-y-1" />
-      </button>
+    <section className="relative mt-11 mb-6 overflow-visible rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 via-white to-violet-50 px-5 py-4 shadow-sm sm:mt-12 dark:border-brand-500/20 dark:from-brand-500/10 dark:via-slate-900 dark:to-violet-500/10">
+      {/* Bichinhos espiando por cima do card (clique = carinho) */}
+      <div className="absolute right-3 -top-[38px] flex items-end gap-0.5 sm:right-6 sm:-top-[46px]">
+        <Pet critter={{ kind: "dog", color: "caramel" }} pose="peek" className="h-10 w-[60px] sm:h-12 sm:w-[74px]" hearts={12} />
+        <Pet critter={{ kind: "cat", color: "gray" }} pose="peek" className="h-10 w-[60px] sm:h-12 sm:w-[74px]" hearts={14} />
+        <Heart className="mb-6 h-4 w-4 text-brand-500 animate-heartbeat sm:mb-8" />
+        <Pet critter={{ kind: "cat", color: "ginger" }} pose="peek" className="h-10 w-[60px] sm:h-12 sm:w-[74px]" hearts={14} bubbleAlign="right" />
+      </div>
 
       <div className="flex flex-col gap-1 pr-0 sm:pr-48">
         <p className="text-lg font-semibold text-slate-900 dark:text-white">

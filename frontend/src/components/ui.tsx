@@ -89,10 +89,10 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
 
 export function Card({ className, children, title, action, padded = true }: { className?: string; children: ReactNode; title?: ReactNode; action?: ReactNode; padded?: boolean }) {
   return (
-    <section className={cn("rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900", className)}>
+    <section className={cn("min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900", className)}>
       {(title || action) && (
         <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5 dark:border-slate-800">
-          <h2 className="font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
+          <h2 className="min-w-0 truncate font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
           {action}
         </header>
       )}
@@ -184,7 +184,7 @@ export function EmptyState({ icon, title, description, action }: { icon?: ReactN
   return (
     <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
       {/* Modo fofinho: um gatinho dormindo; sem ele, o ícone da tela. */}
-      <SleepyCat className="mb-2 hidden cute:block" />
+      <SleepyCat seed={title} className="mb-2" />
       {icon && <div className="mb-3 rounded-full bg-slate-100 p-3 text-slate-400 cute:hidden dark:bg-slate-800">{icon}</div>}
       <p className="font-medium text-slate-700 dark:text-slate-200">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p>}

@@ -107,17 +107,17 @@ export default function DashboardPage() {
           {data?.upcoming.length ? (
             <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {data.upcoming.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 px-5 py-3">
+                <li key={t.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
                   <CategoryIcon icon={t.category?.icon} color={t.category?.color} />
                   <button className="min-w-0 flex-1 text-left" onClick={() => openEdit(t)}>
                     <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{t.description}</p>
                     <p className="text-xs text-slate-500">{t.account?.name} · {fmtDate(t.date)}</p>
                   </button>
                   <StatusBadge t={t} />
-                  <span className={cn("tabular w-28 text-right text-sm font-semibold", t.type === "income" ? "text-teal-600 dark:text-teal-400" : "text-slate-900 dark:text-white")}>
+                  <span className={cn("tabular shrink-0 text-right text-sm font-semibold sm:w-28", t.type === "income" ? "text-teal-600 dark:text-teal-400" : "text-slate-900 dark:text-white")}>
                     {money(t.type === "expense" || t.type === "invest" ? -t.amount : t.amount)}
                   </span>
-                  <button onClick={(e) => pay(t, e)} title="Marcar como pago" className="rounded-lg p-1.5 text-slate-400 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-500/10">
+                  <button onClick={(e) => pay(t, e)} title="Marcar como pago" className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-500/10">
                     <Check className="h-4 w-4" />
                   </button>
                 </li>
