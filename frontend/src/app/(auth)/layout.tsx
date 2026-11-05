@@ -1,5 +1,8 @@
+"use client";
+
 import { ChartColumn, PiggyBank, ShieldCheck, Wallet } from "lucide-react";
 import { CatCouple, Heart } from "@/components/cute";
+import { tr } from "@/lib/i18n";
 
 // Corações decorativos espalhados no painel (posição, tamanho e atraso fixos: render determinístico).
 const FLOATING = [
@@ -19,19 +22,19 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <div className="relative flex items-center gap-2.5">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15"><Wallet className="h-5 w-5" /></span>
-          <span className="text-xl font-bold">Planilha <span className="font-medium text-brand-100">do casal</span></span>
+          <span className="text-xl font-bold">Planilha <span className="font-medium text-brand-100">{tr("do casal", "for couples")}</span></span>
         </div>
 
         <div className="relative space-y-8">
           <CatCouple className="-mb-2" />
-          <h1 className="max-w-md text-4xl leading-tight font-bold">Nossas finanças, nossos sonhos. Juntos. 💕</h1>
+          <h1 className="max-w-md text-4xl leading-tight font-bold">{tr("Nossas finanças, nossos sonhos. Juntos. 💕", "Our money, our dreams. Together. 💕")}</h1>
           <ul className="space-y-4 text-brand-50">
-            <li className="flex gap-3"><ChartColumn className="h-5 w-5 shrink-0" /> Vejam juntos para onde vai o dinheiro de vocês</li>
-            <li className="flex gap-3"><PiggyBank className="h-5 w-5 shrink-0" /> Metas a dois: a viagem, a casa, o casamento...</li>
-            <li className="flex gap-3"><ShieldCheck className="h-5 w-5 shrink-0" /> Avisos de contas a vencer, pra ninguém se estressar</li>
+            <li className="flex gap-3"><ChartColumn className="h-5 w-5 shrink-0" /> {tr("Vejam juntos para onde vai o dinheiro de vocês", "See together where your money goes")}</li>
+            <li className="flex gap-3"><PiggyBank className="h-5 w-5 shrink-0" /> {tr("Metas a dois: a viagem, a casa, o casamento...", "Goals for two: the trip, the house, the wedding...")}</li>
+            <li className="flex gap-3"><ShieldCheck className="h-5 w-5 shrink-0" /> {tr("Avisos de contas a vencer, pra ninguém se estressar", "Reminders for upcoming bills, so nobody stresses out")}</li>
           </ul>
         </div>
-        <p className="relative text-sm text-brand-100">Feito com <Heart className="inline h-3.5 w-3.5 align-[-2px]" /> para organizar a vida a dois</p>
+        <p className="relative text-sm text-brand-100">{tr("Feito com ", "Made with ")}<Heart className="inline h-3.5 w-3.5 align-[-2px]" />{tr(" para organizar a vida a dois", " to organize life as a couple")}</p>
       </div>
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">{children}</div>

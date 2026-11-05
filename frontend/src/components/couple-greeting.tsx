@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { addMonths, differenceInCalendarDays, differenceInCalendarMonths, format, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { dateLocale, intlLocale, tr } from "@/lib/i18n";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/components/auth";
 import { Heart, heartRain, Pet } from "@/components/cute";
@@ -14,7 +14,7 @@ const firstName = (n: string) => n.trim().split(/\s+/)[0];
 
 function greeting(now: Date) {
   const h = now.getHours();
-  return h < 5 ? "Boa madrugada" : h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  return h < 5 ? tr("Boa madrugada", "Good night") : h < 12 ? tr("Bom dia", "Good morning") : h < 18 ? tr("Boa tarde", "Good afternoon") : tr("Boa noite", "Good evening");
 }
 
 /** Contagem do casal: dias juntos, mesversário e aniversário de namoro. */
@@ -94,22 +94,22 @@ export function CoupleGreeting() {
               <p className={cn("flex items-center gap-1.5 text-sm font-medium", photo ? "text-brand-100 drop-shadow" : "text-brand-700 dark:text-brand-300")}>
                 <Sparkles className="h-4 w-4" />
                 {info.isAnniversary
-                  ? `Feliz aniversário de namoro! ${info.years} ano${info.years > 1 ? "s" : ""} juntos com ${firstName(user.partner_name!)} 🎉`
-                  : `Hoje é mesversário! ${info.months} ${info.months > 1 ? "meses" : "mês"} juntos com ${firstName(user.partner_name!)} 🎉`}
+                  ? tr(`Feliz aniversário de namoro! ${info.years} ano${info.years > 1 ? "s" : ""} juntos com ${firstName(user.partner_name!)} 🎉`, `Happy anniversary! ${info.years} year${info.years > 1 ? "s" : ""} together with ${firstName(user.partner_name!)} 🎉`)
+                  : tr(`Hoje é mesversário! ${info.months} ${info.months > 1 ? "meses" : "mês"} juntos com ${firstName(user.partner_name!)} 🎉`, `Happy monthiversary! ${info.months} month${info.months > 1 ? "s" : ""} together with ${firstName(user.partner_name!)} 🎉`)}
               </p>
             ) : (
               <p className={cn("text-sm", photo ? "text-white/90 drop-shadow" : "text-slate-600 dark:text-slate-300")}>
-                Você e <strong className={photo ? "text-brand-200" : "text-brand-700 dark:text-brand-300"}>{firstName(user.partner_name!)}</strong> estão juntos há{" "}
-                <strong className="tabular">{info.days.toLocaleString("pt-BR")} dias</strong>
-                {info.months > 0 && <> ({info.years > 0 ? `${info.years} ano${info.years > 1 ? "s" : ""} e ` : ""}{info.months % 12} {info.months % 12 === 1 ? "mês" : "meses"})</>}.
-                {" "}Próximo mesversário {info.daysToNext === 1 ? "é amanhã" : `em ${info.daysToNext} dias`}
-                <span className={photo ? "text-white/65" : "text-slate-400"}> · {format(info.next, "dd 'de' MMMM", { locale: ptBR })}</span>
+                {tr("Você e ", "You and ")}<strong className={photo ? "text-brand-200" : "text-brand-700 dark:text-brand-300"}>{firstName(user.partner_name!)}</strong>{tr(" estão juntos há ", " have been together for ")}
+                <strong className="tabular">{info.days.toLocaleString(intlLocale())} {tr("dias", "days")}</strong>
+                {info.months > 0 && <> ({info.years > 0 ? tr(`${info.years} ano${info.years > 1 ? "s" : ""} e `, `${info.years} year${info.years > 1 ? "s" : ""} and `) : ""}{info.months % 12} {info.months % 12 === 1 ? tr("mês", "month") : tr("meses", "months")})</>}.
+                {" "}{info.daysToNext === 1 ? tr("Próximo mesversário é amanhã", "Next monthiversary is tomorrow") : tr(`Próximo mesversário em ${info.daysToNext} dias`, `Next monthiversary in ${info.daysToNext} days`)}
+                <span className={photo ? "text-white/65" : "text-slate-400"}> · {format(info.next, tr("dd 'de' MMMM", "MMMM d"), { locale: dateLocale() })}</span>
               </p>
             )
           ) : (
             <p className={cn("text-sm", photo ? "text-white/90 drop-shadow" : "text-slate-600 dark:text-slate-300")}>
-              Organizar o dinheiro a dois fica mais fácil.{" "}
-              <Link href="/perfil" className={cn("font-medium hover:underline", photo ? "text-brand-200" : "text-brand-600 dark:text-brand-400")}>Conte quem é seu amor e desde quando estão juntos →</Link>
+              {tr("Organizar o dinheiro a dois fica mais fácil.", "Managing money as a couple just got easier.")}{" "}
+              <Link href="/perfil" className={cn("font-medium hover:underline", photo ? "text-brand-200" : "text-brand-600 dark:text-brand-400")}>{tr("Conte quem é seu amor e desde quando estão juntos →", "Tell us who your love is and since when you've been together →")}</Link>
             </p>
           )}
         </div>

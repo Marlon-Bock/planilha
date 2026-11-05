@@ -60,10 +60,10 @@ class PushSubscriptionController extends Controller
     public function test(Request $request, WebPushService $push): JsonResponse
     {
         if (! $push->isConfigured()) {
-            return response()->json(['message' => 'O servidor ainda não tem as chaves de notificação (VAPID) configuradas.', 'sent' => 0], 422);
+            return response()->json(['message' => __('O servidor ainda não tem as chaves de notificação (VAPID) configuradas.'), 'sent' => 0], 422);
         }
         if (! PushSubscription::query()->exists()) {
-            return response()->json(['message' => 'Nenhum aparelho com notificações ativas. Toque em "Ativar notificações" primeiro.', 'sent' => 0], 422);
+            return response()->json(['message' => __('Nenhum aparelho com notificações ativas. Toque em "Ativar notificações" primeiro.'), 'sent' => 0], 422);
         }
 
         $name = strtok($request->user()->name, ' ');
@@ -76,6 +76,6 @@ class PushSubscriptionController extends Controller
 
         return $sent
             ? response()->json(['sent' => $sent])
-            : response()->json(['message' => 'Não foi possível entregar a notificação. Desative e ative de novo as notificações neste aparelho.', 'sent' => 0], 422);
+            : response()->json(['message' => __('Não foi possível entregar a notificação. Desative e ative de novo as notificações neste aparelho.'), 'sent' => 0], 422);
     }
 }

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, LoaderCircle, X } from "lucide-react";
 import { cn } from "@/lib/format";
 import { Heart, HeartSpinner, SleepyCat } from "@/components/cute";
+import { tr } from "@/lib/i18n";
 
 /* ---------------------------------- Botão ---------------------------------- */
 
@@ -226,7 +227,7 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: {
         <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-slate-300 sm:hidden dark:bg-slate-700" aria-hidden />
         <header className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 sm:py-4 dark:border-slate-800">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
-          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800" aria-label="Fechar">
+          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800" aria-label={tr("Fechar", "Close")}>
             <X className="h-5 w-5" />
           </button>
         </header>
@@ -242,13 +243,13 @@ export function Modal({ open, onClose, title, children, footer, size = "md" }: {
   );
 }
 
-export function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = "Confirmar", loading, tone = "danger", children }: {
+export function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel = tr("Confirmar", "Confirm"), loading, tone = "danger", children }: {
   open: boolean; onClose: () => void; onConfirm: () => void; title: string; message: ReactNode; confirmLabel?: string; loading?: boolean; tone?: "danger" | "primary"; children?: ReactNode;
 }) {
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm"
       footer={<>
-        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button variant="ghost" onClick={onClose}>{tr("Cancelar", "Cancel")}</Button>
         <Button variant={tone} loading={loading} onClick={onConfirm}>{confirmLabel}</Button>
       </>}>
       <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">{message}{children}</div>
@@ -282,7 +283,7 @@ export function MultiSelect<T extends { id: number; name: string; color?: string
         <div className="absolute z-30 mt-1 max-h-72 w-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
           {value.length > 0 && (
             <button className="w-full rounded-md px-2 py-1.5 text-left text-xs text-brand-600 hover:bg-slate-50 dark:hover:bg-slate-800" onClick={() => onChange([])}>
-              Limpar seleção
+              {tr("Limpar seleção", "Clear selection")}
             </button>
           )}
           {options.map((o) => (
@@ -295,7 +296,7 @@ export function MultiSelect<T extends { id: number; name: string; color?: string
               <span className="truncate text-slate-700 dark:text-slate-200">{o.name}</span>
             </button>
           ))}
-          {!options.length && <p className="px-2 py-3 text-center text-xs text-slate-500">Nada para mostrar</p>}
+          {!options.length && <p className="px-2 py-3 text-center text-xs text-slate-500">{tr("Nada para mostrar", "Nothing to show")}</p>}
         </div>
       )}
     </div>
@@ -309,7 +310,7 @@ export function Pagination({ page, lastPage, onChange }: { page: number; lastPag
   return (
     <div className="flex items-center justify-center gap-2 py-4 text-sm">
       <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)}><ChevronLeft className="h-4 w-4" /></Button>
-      <span className="text-slate-600 dark:text-slate-400">Página {page} de {lastPage}</span>
+      <span className="text-slate-600 dark:text-slate-400">{tr(`Página ${page} de ${lastPage}`, `Page ${page} of ${lastPage}`)}</span>
       <Button variant="outline" size="sm" disabled={page >= lastPage} onClick={() => onChange(page + 1)}><ChevronRight className="h-4 w-4" /></Button>
     </div>
   );

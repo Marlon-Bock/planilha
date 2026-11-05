@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState, useSyncExt
 import { toast } from "sonner";
 import { Download, Share, SquarePlus } from "lucide-react";
 import { Button, Modal } from "@/components/ui";
+import { tr } from "@/lib/i18n";
 
 /* Evento não tipado pelo TypeScript (Chrome/Edge/Android). */
 interface BeforeInstallPromptEvent extends Event {
@@ -49,7 +50,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
     };
     const onInstalled = () => {
       setPromptEvent(null);
-      toast.success("App instalado! Você já pode abrir pelo menu iniciar ou pela tela inicial.");
+      toast.success(tr("App instalado! Você já pode abrir pelo menu iniciar ou pela tela inicial.", "App installed! You can now open it from the start menu or home screen."));
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
@@ -71,10 +72,10 @@ export function PwaProvider({ children }: { children: ReactNode }) {
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
     const offerUpdate = (worker: ServiceWorker) =>
-      toast("Nova versão disponível", {
-        description: "Atualize para usar as últimas melhorias.",
+      toast(tr("Nova versão disponível", "New version available"), {
+        description: tr("Atualize para usar as últimas melhorias.", "Update to get the latest improvements."),
         duration: Infinity,
-        action: { label: "Atualizar", onClick: () => worker.postMessage("SKIP_WAITING") },
+        action: { label: tr("Atualizar", "Update"), onClick: () => worker.postMessage("SKIP_WAITING") },
       });
 
     let timer: ReturnType<typeof setInterval> | undefined;
@@ -118,19 +119,19 @@ export function InstallButton({ className, variant = "outline" }: { className?: 
 
   return (
     <>
-      <Button variant={variant} className={className} onClick={() => (canInstall ? install() : setIosHelp(true))} title="Instalar o app neste dispositivo">
-        <Download className="h-4 w-4" /> <span className="hidden md:inline">Instalar app</span>
+      <Button variant={variant} className={className} onClick={() => (canInstall ? install() : setIosHelp(true))} title={tr("Instalar o app neste dispositivo", "Install the app on this device")}>
+        <Download className="h-4 w-4" /> <span className="hidden md:inline">{tr("Instalar app", "Install app")}</span>
       </Button>
-      <Modal open={iosHelp} onClose={() => setIosHelp(false)} title="Instalar no iPhone / iPad" size="sm"
-        footer={<Button onClick={() => setIosHelp(false)}>Entendi</Button>}>
+      <Modal open={iosHelp} onClose={() => setIosHelp(false)} title={tr("Instalar no iPhone / iPad", "Install on iPhone / iPad")} size="sm"
+        footer={<Button onClick={() => setIosHelp(false)}>{tr("Entendi", "Got it")}</Button>}>
         <ol className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
           <li className="flex gap-3">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800"><Share className="h-4 w-4" /></span>
-            <span>No Safari, toque em <strong>Compartilhar</strong> (o quadrado com a seta para cima), na barra inferior.</span>
+            <span>{tr("No Safari, toque em ", "In Safari, tap ")}<strong>{tr("Compartilhar", "Share")}</strong>{tr(" (o quadrado com a seta para cima), na barra inferior.", " (the square with the up arrow) in the bottom bar.")}</span>
           </li>
           <li className="flex gap-3">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800"><SquarePlus className="h-4 w-4" /></span>
-            <span>Role e escolha <strong>Adicionar à Tela de Início</strong>, depois toque em <strong>Adicionar</strong>.</span>
+            <span>{tr("Role e escolha ", "Scroll and choose ")}<strong>{tr("Adicionar à Tela de Início", "Add to Home Screen")}</strong>{tr(", depois toque em ", ", then tap ")}<strong>{tr("Adicionar", "Add")}</strong>.</span>
           </li>
         </ol>
       </Modal>

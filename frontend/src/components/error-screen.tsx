@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArrowLeft, House, RotateCcw } from "lucide-react";
 import { burstFrom, Cat, Heart } from "@/components/cute";
+import { tr } from "@/lib/i18n";
 
 // Corações decorativos de fundo (posições fixas: render determinístico).
 const HEARTS = [
@@ -16,6 +17,20 @@ const HEARTS = [
  * Tela de erro no estilo do app: gatinho, código grande com coração no lugar do "0"
  * e ações para sair dali. Usada no 404, em erros inesperados e no erro geral.
  */
+/** Página 404 (os textos ficam aqui, no cliente, para seguir o idioma escolhido). */
+export function NotFoundScreen() {
+  return (
+    <ErrorScreen
+      code="404"
+      title={tr("Ops! Essa página se perdeu", "Oops! This page got lost")}
+      message={<>{tr(
+        "Procuramos em todo canto, até embaixo do sofá 🐾, mas ela não existe. Talvez o endereço esteja errado ou a página tenha mudado de lugar.",
+        "We looked everywhere, even under the couch 🐾, but it doesn't exist. Maybe the address is wrong or the page has moved.",
+      )}</>}
+    />
+  );
+}
+
 export function ErrorScreen({ code, title, message, cat = "sit", children, onRetry, detail }: {
   code: string;
   title: string;
@@ -38,7 +53,7 @@ export function ErrorScreen({ code, title, message, cat = "sit", children, onRet
       ))}
 
       <div className="relative w-full max-w-lg text-center">
-        <button type="button" onClick={(e) => burstFrom(e, 12)} aria-label="Gatinho" title="Carinho 💕" className="mx-auto block">
+        <button type="button" onClick={(e) => burstFrom(e, 12)} aria-label={tr("Gatinho", "Kitty")} title={tr("Carinho 💕", "Pet 💕")} className="mx-auto block">
           <Cat color={cat === "sleep" ? "cream" : "ginger"} pose={cat} className="mx-auto h-28 w-32 transition-transform hover:-translate-y-1" />
         </button>
 
@@ -50,23 +65,23 @@ export function ErrorScreen({ code, title, message, cat = "sit", children, onRet
           {onRetry && (
             <button type="button" onClick={onRetry}
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-sm shadow-brand-500/30 transition hover:bg-brand-700">
-              <RotateCcw className="h-4 w-4" /> Tentar de novo
+              <RotateCcw className="h-4 w-4" /> {tr("Tentar de novo", "Try again")}
             </button>
           )}
           <Link href="/dashboard"
             className={onRetry
               ? "inline-flex h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               : "inline-flex h-11 items-center gap-2 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white shadow-sm shadow-brand-500/30 transition hover:bg-brand-700"}>
-            <House className="h-4 w-4" /> Ir para o início
+            <House className="h-4 w-4" /> {tr("Ir para o início", "Go home")}
           </Link>
           <button type="button" onClick={() => (window.history.length > 1 ? router.back() : router.push("/dashboard"))}
             className="inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-medium text-slate-600 transition hover:bg-white/70 dark:text-slate-300 dark:hover:bg-slate-800">
-            <ArrowLeft className="h-4 w-4" /> Voltar
+            <ArrowLeft className="h-4 w-4" /> {tr("Voltar", "Back")}
           </button>
         </div>
 
         {children}
-        {detail && <p className="mt-6 font-mono text-[11px] text-slate-400">código do erro: {detail}</p>}
+        {detail && <p className="mt-6 font-mono text-[11px] text-slate-400">{tr("código do erro", "error code")}: {detail}</p>}
       </div>
     </main>
   );

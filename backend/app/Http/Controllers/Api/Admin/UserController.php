@@ -69,7 +69,7 @@ class UserController extends Controller
         ]);
 
         if ($user->is($request->user()) && (($data['role'] ?? 'admin') !== 'admin' || ($data['is_active'] ?? true) === false)) {
-            return response()->json(['message' => 'Você não pode remover seu próprio acesso de administrador.'], 422);
+            return response()->json(['message' => __('Você não pode remover seu próprio acesso de administrador.')], 422);
         }
         if (empty($data['password'])) {
             unset($data['password']);
@@ -86,7 +86,7 @@ class UserController extends Controller
     public function destroy(Request $request, User $user): JsonResponse
     {
         if ($user->is($request->user())) {
-            return response()->json(['message' => 'Você não pode excluir a si mesmo.'], 422);
+            return response()->json(['message' => __('Você não pode excluir a si mesmo.')], 422);
         }
         $user->delete();
 

@@ -10,6 +10,7 @@ import { useAccounts, useInvalidateFinance } from "@/lib/queries";
 import type { Account } from "@/lib/types";
 import { Badge, Button, Carousel, ColorPicker, ConfirmDialog, cuteHover, EmptyState, Field, Input, Modal, MoneyInput, PageHeader, Progress, Select, Skeleton, Toggle } from "@/components/ui";
 import { ACCOUNT_ICONS } from "@/components/icons";
+import { tr } from "@/lib/i18n";
 
 export default function AccountsPage() {
   const [showArchived, setShowArchived] = useState(false);
@@ -22,7 +23,7 @@ export default function AccountsPage() {
   const remove = async () => {
     try {
       await api.delete(`/accounts/${toDelete!.id}`);
-      toast.success("Conta excluída");
+      toast.success(tr("Conta excluída", "Account deleted"));
       invalidate();
     } catch (e) {
       toast.error(parseError(e).message);
@@ -35,24 +36,24 @@ export default function AccountsPage() {
 
   return (
     <>
-      <PageHeader title="Contas e cartões" description="Bancos, carteira, poupança, investimentos e cartões de crédito"
+      <PageHeader title={tr("Contas e cartões", "Accounts & cards")} description={tr("Bancos, carteira, poupança, investimentos e cartões de crédito", "Banks, wallet, savings, investments and credit cards")}
         actions={<>
-          <Toggle checked={showArchived} onChange={setShowArchived} label="Mostrar arquivadas" />
-          <Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="h-4 w-4" /> Nova conta</Button>
+          <Toggle checked={showArchived} onChange={setShowArchived} label={tr("Mostrar arquivadas", "Show archived")} />
+          <Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="h-4 w-4" /> {tr("Nova conta", "New account")}</Button>
         </>} />
 
       {data && (
         <Carousel className="mb-6 sm:grid-cols-3">
-          <Summary label="Saldo atual (contas)" value={data.summary.total_balance} />
-          <Summary label="Saldo previsto (com pendentes)" value={data.summary.projected_balance} />
-          <Summary label="Fatura/dívida de cartões" value={-data.summary.credit_card_debt} />
+          <Summary label={tr("Saldo atual (contas)", "Current balance (accounts)")} value={data.summary.total_balance} />
+          <Summary label={tr("Saldo previsto (com pendentes)", "Projected balance (with pending)")} value={data.summary.projected_balance} />
+          <Summary label={tr("Fatura/dívida de cartões", "Card statements/debt")} value={-data.summary.credit_card_debt} />
         </Carousel>
       )}
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-44" />)}</div>
       ) : accounts.length === 0 ? (
-        <EmptyState icon={<Wallet className="h-6 w-6" />} title="Nenhuma conta cadastrada" />
+        <EmptyState icon={<Wallet className="h-6 w-6" />} title={tr("Nenhuma conta cadastrada", "No accounts yet")} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {accounts.map((a) => {
@@ -70,33 +71,33 @@ export default function AccountsPage() {
                     </div>
                   </div>
                   <div className="flex gap-1 opacity-60 group-hover:opacity-100">
-                    <button className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800" onClick={() => { setEditing(a); setFormOpen(true); }} aria-label="Editar"><Pencil className="h-4 w-4" /></button>
-                    <button className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800" onClick={() => setToDelete(a)} aria-label="Excluir"><Trash2 className="h-4 w-4" /></button>
+                    <button className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800" onClick={() => { setEditing(a); setFormOpen(true); }} aria-label={tr("Editar", "Edit")}><Pencil className="h-4 w-4" /></button>
+                    <button className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 dark:hover:bg-slate-800" onClick={() => setToDelete(a)} aria-label={tr("Excluir", "Delete")}><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
 
-                <p className="mt-4 text-xs text-slate-500">{isCard ? "Fatura em aberto" : "Saldo atual"}</p>
+                <p className="mt-4 text-xs text-slate-500">{isCard ? tr("Fatura em aberto", "Open statement") : tr("Saldo atual", "Current balance")}</p>
                 <p className={cn("tabular text-2xl font-bold", a.balance < 0 && !isCard ? "text-rose-600" : "text-slate-900 dark:text-white")}>
                   {money(isCard ? Math.abs(Math.min(0, a.projected_balance)) : a.balance)}
                 </p>
-                {!isCard && a.projected_balance !== a.balance && <p className="text-xs text-slate-500">Previsto: {money(a.projected_balance)}</p>}
+                {!isCard && a.projected_balance !== a.balance && <p className="text-xs text-slate-500">{tr("Previsto", "Projected")}: {money(a.projected_balance)}</p>}
 
                 {isCard && a.credit_limit ? (
                   <div className="mt-3">
                     <Progress value={((a.credit_used ?? 0) / a.credit_limit) * 100} />
                     <div className="mt-1 flex justify-between text-xs text-slate-500">
-                      <span>Disponível {money(a.credit_available)}</span>
-                      <span>Limite {money(a.credit_limit)}</span>
+                      <span>{tr("Disponível", "Available")} {money(a.credit_available)}</span>
+                      <span>{tr("Limite", "Limit")} {money(a.credit_limit)}</span>
                     </div>
-                    {(a.closing_day || a.due_day) && <p className="mt-1 text-xs text-slate-500">Fecha dia {a.closing_day ?? "—"} · vence dia {a.due_day ?? "—"}</p>}
+                    {(a.closing_day || a.due_day) && <p className="mt-1 text-xs text-slate-500">{tr("Fecha dia", "Closes on day")} {a.closing_day ?? "—"} · {tr("vence dia", "due on day")} {a.due_day ?? "—"}</p>}
                   </div>
                 ) : null}
 
                 <div className="mt-4 flex items-center justify-between">
-                  <TxLink filters={{ account_ids: [a.id] }} className="text-xs font-medium text-brand-600 hover:underline">Ver lançamentos</TxLink>
+                  <TxLink filters={{ account_ids: [a.id] }} className="text-xs font-medium text-brand-600 hover:underline">{tr("Ver lançamentos", "See transactions")}</TxLink>
                   <div className="flex gap-1">
-                    {!a.include_in_total && <Badge>Fora do total</Badge>}
-                    {a.is_archived && <Badge><Archive className="h-3 w-3" />Arquivada</Badge>}
+                    {!a.include_in_total && <Badge>{tr("Fora do total", "Excluded from total")}</Badge>}
+                    {a.is_archived && <Badge><Archive className="h-3 w-3" />{tr("Arquivada", "Archived")}</Badge>}
                   </div>
                 </div>
               </div>
@@ -106,8 +107,8 @@ export default function AccountsPage() {
       )}
 
       <AccountForm open={formOpen} onClose={() => setFormOpen(false)} account={editing} />
-      <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={remove} title="Excluir conta" confirmLabel="Excluir"
-        message={<>Excluir a conta <strong>{toDelete?.name}</strong>? Contas com lançamentos não podem ser excluídas — nesse caso, arquive-a pela edição.</>} />
+      <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={remove} title={tr("Excluir conta", "Delete account")} confirmLabel={tr("Excluir", "Delete")}
+        message={<>{tr("Excluir a conta ", "Delete the account ")}<strong>{toDelete?.name}</strong>{tr("? Contas com lançamentos não podem ser excluídas — nesse caso, arquive-a pela edição.", "? Accounts with transactions can't be deleted — in that case, archive it in the edit form.")}</>} />
     </>
   );
 }
@@ -155,7 +156,7 @@ function AccountFormInner({ onClose, account }: AccountFormProps) {
     try {
       if (account) await api.put(`/accounts/${account.id}`, payload);
       else await api.post("/accounts", payload);
-      toast.success(account ? "Conta atualizada" : "Conta criada");
+      toast.success(account ? tr("Conta atualizada", "Account updated") : tr("Conta criada", "Account created"));
       invalidate();
       onClose();
     } catch (err) {
@@ -168,25 +169,25 @@ function AccountFormInner({ onClose, account }: AccountFormProps) {
   };
 
   return (
-    <Modal open onClose={onClose} title={account ? "Editar conta" : "Nova conta"}
-      footer={<><Button variant="ghost" onClick={onClose}>Cancelar</Button><Button type="submit" form="account-form" loading={saving}>Salvar</Button></>}>
+    <Modal open onClose={onClose} title={account ? tr("Editar conta", "Edit account") : tr("Nova conta", "New account")}
+      footer={<><Button variant="ghost" onClick={onClose}>{tr("Cancelar", "Cancel")}</Button><Button type="submit" form="account-form" loading={saving}>{tr("Salvar", "Save")}</Button></>}>
       <form id="account-form" onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <Field label="Nome" error={errors.name} className="sm:col-span-2"><Input autoFocus value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Ex.: Nubank, Carteira" /></Field>
-        <Field label="Tipo"><Select value={form.type} onChange={(e) => set("type", e.target.value)}>{Object.entries(ACCOUNT_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select></Field>
-        <Field label="Saldo inicial" error={errors.initial_balance} hint="Saldo antes do primeiro lançamento"><MoneyInput allowNegative value={form.initial_balance} onChange={(v) => set("initial_balance", v)} /></Field>
+        <Field label={tr("Nome", "Name")} error={errors.name} className="sm:col-span-2"><Input autoFocus value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={tr("Ex.: Nubank, Carteira", "E.g. Nubank, Wallet")} /></Field>
+        <Field label={tr("Tipo", "Type")}><Select value={form.type} onChange={(e) => set("type", e.target.value)}>{Object.entries(ACCOUNT_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select></Field>
+        <Field label={tr("Saldo inicial", "Opening balance")} error={errors.initial_balance} hint={tr("Saldo antes do primeiro lançamento", "Balance before the first transaction")}><MoneyInput allowNegative value={form.initial_balance} onChange={(v) => set("initial_balance", v)} /></Field>
         {isCard && (
           <>
-            <Field label="Limite" error={errors.credit_limit}><MoneyInput value={form.credit_limit} onChange={(v) => set("credit_limit", v)} /></Field>
+            <Field label={tr("Limite", "Limit")} error={errors.credit_limit}><MoneyInput value={form.credit_limit} onChange={(v) => set("credit_limit", v)} /></Field>
             <div className="grid grid-cols-2 gap-2">
-              <Field label="Fecha dia"><Select value={form.closing_day} onChange={(e) => set("closing_day", e.target.value)} placeholder="Dia"><option value="">—</option>{DAYS.map((d) => <option key={d} value={d}>Dia {d}</option>)}</Select></Field>
-              <Field label="Vence dia"><Select value={form.due_day} onChange={(e) => set("due_day", e.target.value)} placeholder="Dia"><option value="">—</option>{DAYS.map((d) => <option key={d} value={d}>Dia {d}</option>)}</Select></Field>
+              <Field label={tr("Fecha dia", "Closes on day")}><Select value={form.closing_day} onChange={(e) => set("closing_day", e.target.value)} placeholder={tr("Dia", "Day")}><option value="">—</option>{DAYS.map((d) => <option key={d} value={d}>{tr(`Dia ${d}`, `Day ${d}`)}</option>)}</Select></Field>
+              <Field label={tr("Vence dia", "Due on day")}><Select value={form.due_day} onChange={(e) => set("due_day", e.target.value)} placeholder={tr("Dia", "Day")}><option value="">—</option>{DAYS.map((d) => <option key={d} value={d}>{tr(`Dia ${d}`, `Day ${d}`)}</option>)}</Select></Field>
             </div>
           </>
         )}
-        <Field label="Cor" group className="sm:col-span-2"><ColorPicker value={form.color} onChange={(c) => set("color", c)} /></Field>
+        <Field label={tr("Cor", "Color")} group className="sm:col-span-2"><ColorPicker value={form.color} onChange={(c) => set("color", c)} /></Field>
         <div className="flex flex-wrap gap-6 sm:col-span-2">
-          <Toggle checked={form.include_in_total} onChange={(v) => set("include_in_total", v)} label="Incluir no saldo total" />
-          {account && <Toggle checked={form.is_archived} onChange={(v) => set("is_archived", v)} label="Arquivada" />}
+          <Toggle checked={form.include_in_total} onChange={(v) => set("include_in_total", v)} label={tr("Incluir no saldo total", "Include in total balance")} />
+          {account && <Toggle checked={form.is_archived} onChange={(v) => set("is_archived", v)} label={tr("Arquivada", "Archived")} />}
         </div>
       </form>
     </Modal>

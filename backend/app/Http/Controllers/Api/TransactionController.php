@@ -112,7 +112,7 @@ class TransactionController extends Controller
     private function guardInvestment(Transaction $t): ?JsonResponse
     {
         return $t->isInvestmentLinked()
-            ? response()->json(['message' => 'Aplicações e resgates são editados na tela de Investimentos.'], 422)
+            ? response()->json(['message' => __('Aplicações e resgates são editados na tela de Investimentos.')], 422)
             : null;
     }
 
@@ -295,8 +295,8 @@ class TransactionController extends Controller
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer', Rule::exists('tags', 'id')->where('user_id', $uid)],
         ], [
-            'transfer_account_id.required_if' => 'Escolha a conta de destino da transferência.',
-            'transfer_account_id.different' => 'A conta de destino deve ser diferente da conta de origem.',
+            'transfer_account_id.required_if' => __('Escolha a conta de destino da transferência.'),
+            'transfer_account_id.different' => __('A conta de destino deve ser diferente da conta de origem.'),
         ]);
 
         if ($data['type'] === 'transfer') {

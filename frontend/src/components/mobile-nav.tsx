@@ -2,7 +2,7 @@
 
 /**
  * Navegação de app no celular/tablet (abaixo de 1024px), no estilo dos apps de banco:
- * barra fixa embaixo com os atalhos principais, botão "+" central e a folha "Mais".
+ * barra fixa embaixo com os atalhos principais, botão "+" central e a folha tr("Mais", "More").
  */
 
 import Link from "next/link";
@@ -10,7 +10,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
-import { ChartLine, House, LayoutGrid, LogOut, Moon, Plus, Receipt, Sun, X, type LucideIcon } from "lucide-react";
+import { ChartLine, House, Languages, LayoutGrid, LogOut, Moon, Plus, Receipt, Sun, X, type LucideIcon } from "lucide-react";
+import { getLang, setLang, tr } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/format";
 import type { AppNotification, User } from "@/lib/types";
@@ -38,26 +39,26 @@ function Tab({ href, label, icon: Icon, active }: NavItem & { active: boolean })
 export function BottomNav({ onNew, onMore, moreActive }: { onNew: () => void; onMore: () => void; moreActive: boolean }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Navegação principal"
+    <nav aria-label={tr("Navegação principal", "Main navigation")}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden dark:border-slate-800 dark:bg-slate-950/90">
       <div className="mx-auto flex h-16 max-w-xl items-stretch px-1">
-        <Tab href="/dashboard" label="Início" icon={House} active={isActive(pathname, "/dashboard")} />
-        <Tab href="/transacoes" label="Lançamentos" icon={Receipt} active={isActive(pathname, "/transacoes")} />
+        <Tab href="/dashboard" label={tr("Início", "Home")} icon={House} active={isActive(pathname, "/dashboard")} />
+        <Tab href="/transacoes" label={tr("Lançamentos", "Transactions")} icon={Receipt} active={isActive(pathname, "/transacoes")} />
         <div className="flex flex-1 items-start justify-center">
           {/* Botão principal elevado, como nos apps de banco. */}
-          <button type="button" onClick={onNew} aria-label="Novo lançamento"
+          <button type="button" onClick={onNew} aria-label={tr("Novo lançamento", "New transaction")}
             className="-mt-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-lg shadow-brand-500/40 ring-4 ring-white transition active:scale-95 dark:ring-slate-950">
             <Plus className="h-7 w-7" strokeWidth={2.5} />
           </button>
         </div>
-        <Tab href="/investimentos" label="Investir" icon={ChartLine} active={isActive(pathname, "/investimentos")} />
-        <button type="button" onClick={onMore} aria-label="Mais opções"
+        <Tab href="/investimentos" label={tr("Investir", "Invest")} icon={ChartLine} active={isActive(pathname, "/investimentos")} />
+        <button type="button" onClick={onMore} aria-label={tr("Mais opções", "More options")}
           className="flex flex-1 flex-col items-center justify-center gap-0.5 pt-1.5 pb-1 text-[11px] font-medium">
           <span className={cn("flex h-8 w-14 items-center justify-center rounded-full transition-all",
             moreActive ? "bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300" : "text-slate-500 dark:text-slate-400")}>
             <LayoutGrid className="h-5 w-5" strokeWidth={moreActive ? 2.4 : 2} />
           </span>
-          <span className={moreActive ? "text-brand-700 dark:text-brand-300" : "text-slate-500 dark:text-slate-400"}>Mais</span>
+          <span className={moreActive ? "text-brand-700 dark:text-brand-300" : "text-slate-500 dark:text-slate-400"}>{tr("Mais", "More")}</span>
         </button>
       </div>
     </nav>
@@ -98,7 +99,7 @@ export function MoreSheet({ open, onClose, items, user, onLogout }: {
   const first = (n: string) => n.trim().split(/\s+/)[0];
 
   return (
-    <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Mais opções">
+    <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={tr("Mais opções", "More options")}>
       <div className="absolute inset-0 animate-[fade-in_.2s_ease-out] bg-slate-950/40 backdrop-blur-[2px]" onClick={onClose} />
       <div className="absolute inset-x-0 bottom-0 max-h-[88vh] animate-[sheet-up_.28s_cubic-bezier(.2,.8,.2,1)] overflow-y-auto rounded-t-3xl bg-white pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl dark:bg-slate-900">
         <div className="sticky top-0 z-10 bg-white/95 px-5 pt-3 pb-2 backdrop-blur dark:bg-slate-900/95">
@@ -111,7 +112,7 @@ export function MoreSheet({ open, onClose, items, user, onLogout }: {
                 {user.partner_name ? <>{first(user.name)} <Heart className="h-3 w-3" /> {first(user.partner_name)}</> : user.email}
               </p>
             </div>
-            <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Fechar"><X className="h-5 w-5" /></button>
+            <button onClick={onClose} className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={tr("Fechar", "Close")}><X className="h-5 w-5" /></button>
           </div>
         </div>
 
@@ -136,12 +137,14 @@ export function MoreSheet({ open, onClose, items, user, onLogout }: {
         <div className="mt-4 space-y-1 border-t border-slate-100 px-4 pt-3 dark:border-slate-800">
           <SheetRow onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             icon={resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            label={resolvedTheme === "dark" ? "Usar tema claro" : "Usar tema escuro"} />
+            label={resolvedTheme === "dark" ? tr("Usar tema claro", "Use light theme") : tr("Usar tema escuro", "Use dark theme")} />
+          <SheetRow onClick={() => setLang(getLang() === "en" ? "pt-BR" : "en")} icon={<Languages className="h-5 w-5" />}
+            label={getLang() === "en" ? "Mudar para português" : "Switch to English"} />
           {(canInstall || isIOS) && (
             <SheetRow onClick={() => { if (canInstall) void install(); else onClose(); }} icon={<Plus className="h-5 w-5" />}
-              label={canInstall ? "Instalar o app neste celular" : "Instalar: Compartilhar → Tela de Início"} />
+              label={canInstall ? tr("Instalar o app neste celular", "Install the app on this phone") : tr("Instalar: Compartilhar → Tela de Início", "Install: Share → Add to Home Screen")} />
           )}
-          <SheetRow onClick={onLogout} icon={<LogOut className="h-5 w-5" />} label="Sair da conta" danger />
+          <SheetRow onClick={onLogout} icon={<LogOut className="h-5 w-5" />} label={tr("Sair da conta", "Sign out")} danger />
         </div>
       </div>
     </div>

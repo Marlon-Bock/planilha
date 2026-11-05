@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { rememberNext } from "@/lib/navigation";
+import { getLang, tr } from "@/lib/i18n";
 
 export const api = axios.create({
   baseURL: "/api",
@@ -20,6 +21,7 @@ export function ensureCsrf() {
 }
 
 api.interceptors.request.use(async (config) => {
+  config.headers.set("X-Locale", getLang()); // mensagens do servidor no idioma do app
   if (config.method && config.method.toLowerCase() !== "get") await ensureCsrf();
   return config;
 });
@@ -57,9 +59,9 @@ export function parseError(error: unknown): { message: string; fields: FieldErro
     const fields: FieldErrors = {};
     for (const [k, v] of Object.entries(data?.errors ?? {})) fields[k] = v[0];
     const first = Object.values(fields)[0];
-    if (!error.response) return { message: "Não foi possível conectar ao servidor.", fields };
-    if (error.response.status === 429) return { message: "Muitas tentativas. Aguarde um minuto.", fields };
-    return { message: first ?? data?.message ?? "Algo deu errado. Tente novamente.", fields };
+    if (!error.response) return { message: tr("Não foi possível conectar ao servidor.", "Could not connect to the server."), fields };
+    if (error.response.status === 429) return { message: tr("Muitas tentativas. Aguarde um minuto.", "Too many attempts. Wait a minute."), fields };
+    return { message: first ?? data?.message ?? tr("Algo deu errado. Tente novamente.", "Something went wrong. Please try again."), fields };
   }
-  return { message: "Algo deu errado. Tente novamente.", fields: {} };
+  return { message: tr("Algo deu errado. Tente novamente.", "Something went wrong. Please try again."), fields: {} };
 }

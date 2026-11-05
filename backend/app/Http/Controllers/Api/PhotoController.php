@@ -33,15 +33,14 @@ class PhotoController extends Controller
     {
         $request->validate(
             ['photo' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:10240']],
-            ['photo.max' => 'A foto pode ter no máximo 10 MB.'],
-            ['photo' => 'foto'],
+            ['photo.max' => __('A foto pode ter no máximo 10 MB.')],
         );
 
         $user = $request->user();
         $file = $request->file('photo');
         $name = $slot.'-'.Str::lower(Str::random(20)).'.'.($file->extension() ?: 'jpg');
         $path = $file->storeAs((string) $user->id, $name, 'uploads');
-        abort_unless($path, 500, 'Não foi possível salvar a foto.');
+        abort_unless($path, 500, __('Não foi possível salvar a foto.'));
 
         $column = self::SLOTS[$slot];
         $old = $user->{$column};

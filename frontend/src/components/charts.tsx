@@ -4,6 +4,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, ReferenceLine, Responsiv
 import { fmtDate, money, monthLabel, percent } from "@/lib/format";
 import type { CategorySlice, EvolutionPoint } from "@/lib/types";
 import { Dot } from "@/components/ui";
+import { tr } from "@/lib/i18n";
 
 // Par validado (CVD deutan ΔE 10.2, contraste ≥ 3:1 em claro e escuro).
 export const INCOME_COLOR = "#0d9488";
@@ -43,15 +44,15 @@ const axisMoney = (v: number) => money(v, { compact: true });
 export function EvolutionChart({ data, height = 280 }: { data: EvolutionPoint[]; height?: number }) {
   return (
     <div>
-      <Legend items={[{ label: "Receitas", color: INCOME_COLOR }, { label: "Despesas", color: EXPENSE_COLOR }]} />
+      <Legend items={[{ label: tr("Receitas", "Income"), color: INCOME_COLOR }, { label: tr("Despesas", "Expenses"), color: EXPENSE_COLOR }]} />
       <ResponsiveContainer width="100%" height={height}>
         <BarChart data={data} barGap={2} barCategoryGap="28%" margin={{ left: 4, right: 4, top: 4 }}>
           <CartesianGrid vertical={false} strokeDasharray="0" />
           <XAxis dataKey="month" tickFormatter={(m) => monthLabel(m, true)} tickLine={false} axisLine={false} />
           <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={64} />
           <Tooltip cursor={{ fill: "rgba(148,163,184,0.12)" }} content={<ChartTooltip labelFormat={(m) => monthLabel(m)} />} />
-          <Bar dataKey="income" name="Receitas" fill={INCOME_COLOR} radius={[4, 4, 0, 0]} maxBarSize={22} />
-          <Bar dataKey="expense" name="Despesas" fill={EXPENSE_COLOR} radius={[4, 4, 0, 0]} maxBarSize={22} />
+          <Bar dataKey="income" name={tr("Receitas", "Income")} fill={INCOME_COLOR} radius={[4, 4, 0, 0]} maxBarSize={22} />
+          <Bar dataKey="expense" name={tr("Despesas", "Expenses")} fill={EXPENSE_COLOR} radius={[4, 4, 0, 0]} maxBarSize={22} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -68,7 +69,7 @@ export function BalanceChart({ data, height = 220 }: { data: EvolutionPoint[]; h
         <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={64} />
         <ReferenceLine y={0} stroke="#94a3b8" />
         <Tooltip cursor={{ fill: "rgba(148,163,184,0.12)" }} content={<ChartTooltip labelFormat={(m) => monthLabel(m)} />} />
-        <Bar dataKey="balance" name="Resultado" fill={BALANCE_COLOR} radius={[4, 4, 4, 4]} maxBarSize={28} />
+        <Bar dataKey="balance" name={tr("Resultado", "Balance")} fill={BALANCE_COLOR} radius={[4, 4, 4, 4]} maxBarSize={28} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -89,8 +90,8 @@ export function DailyChart({ data, height = 220 }: { data: { date: string; accum
         <XAxis dataKey="date" tickFormatter={(d) => fmtDate(d, "dd")} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={16} />
         <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={64} />
         <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" />
-        <Tooltip cursor={{ stroke: "#94a3b8" }} content={<ChartTooltip labelFormat={(d) => fmtDate(d, "dd 'de' MMMM")} />} />
-        <Area type="monotone" dataKey="accumulated" name="Acumulado no mês" stroke={BALANCE_COLOR} strokeWidth={2} fill="url(#accFill)" activeDot={{ r: 4 }} />
+        <Tooltip cursor={{ stroke: "#94a3b8" }} content={<ChartTooltip labelFormat={(d) => fmtDate(d, tr("dd 'de' MMMM", "MMMM d"))} />} />
+        <Area type="monotone" dataKey="accumulated" name={tr("Acumulado no mês", "Month to date")} stroke={BALANCE_COLOR} strokeWidth={2} fill="url(#accFill)" activeDot={{ r: 4 }} />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -109,7 +110,7 @@ export function CategoryBars({ data, limit = 8, onSelect }: { data: CategorySlic
     <ul className="space-y-3">
       {rows.map((r) => (
         <li key={`${r.category_id}-${r.name}`}>
-          <button type="button" disabled={!onSelect || r.category_id === null} onClick={() => onSelect?.(r)} className="group w-full text-left disabled:cursor-default" title={`${r.count} lançamento(s)`}>
+          <button type="button" disabled={!onSelect || r.category_id === null} onClick={() => onSelect?.(r)} className="group w-full text-left disabled:cursor-default" title={tr(`${r.count} lançamento(s)`, `${r.count} transaction(s)`)}>
             <div className="mb-1 flex items-center justify-between gap-2 text-sm">
               <span className="flex min-w-0 items-center gap-2 text-slate-700 group-enabled:group-hover:underline dark:text-slate-200">
                 <Dot color={r.color} /> <span className="truncate">{r.name}</span>
@@ -138,7 +139,7 @@ export const INVEST_INVESTED_COLOR = "#0891b2";
 export function InvestmentEvolutionChart({ data, height = 260 }: { data: { month: string; balance: number; invested: number }[]; height?: number }) {
   return (
     <div>
-      <Legend items={[{ label: "Saldo", color: INVEST_BALANCE_COLOR }, { label: "Investido (aportes − resgates)", color: INVEST_INVESTED_COLOR }]} />
+      <Legend items={[{ label: tr("Saldo", "Balance"), color: INVEST_BALANCE_COLOR }, { label: tr("Investido (aportes − resgates)", "Invested (deposits − withdrawals)"), color: INVEST_INVESTED_COLOR }]} />
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={data} margin={{ left: 4, right: 4, top: 4 }}>
           <defs>
@@ -151,8 +152,8 @@ export function InvestmentEvolutionChart({ data, height = 260 }: { data: { month
           <XAxis dataKey="month" tickFormatter={(m) => monthLabel(m, true)} tickLine={false} axisLine={false} />
           <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={64} />
           <Tooltip cursor={{ stroke: "#94a3b8" }} content={<ChartTooltip labelFormat={(m) => monthLabel(m)} />} />
-          <Area type="monotone" dataKey="invested" name="Investido" stroke={INVEST_INVESTED_COLOR} strokeWidth={2} strokeDasharray="5 4" fill="none" activeDot={{ r: 4 }} />
-          <Area type="monotone" dataKey="balance" name="Saldo" stroke={INVEST_BALANCE_COLOR} strokeWidth={2} fill="url(#invFill)" activeDot={{ r: 4 }} />
+          <Area type="monotone" dataKey="invested" name={tr("Investido", "Invested")} stroke={INVEST_INVESTED_COLOR} strokeWidth={2} strokeDasharray="5 4" fill="none" activeDot={{ r: 4 }} />
+          <Area type="monotone" dataKey="balance" name={tr("Saldo", "Balance")} stroke={INVEST_BALANCE_COLOR} strokeWidth={2} fill="url(#invFill)" activeDot={{ r: 4 }} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -169,7 +170,7 @@ export function MonthlyYieldChart({ data, height = 220 }: { data: { month: strin
         <YAxis tickFormatter={axisMoney} tickLine={false} axisLine={false} width={64} />
         <ReferenceLine y={0} stroke="#94a3b8" />
         <Tooltip cursor={{ fill: "rgba(148,163,184,0.12)" }} content={<ChartTooltip labelFormat={(m) => monthLabel(m)} />} />
-        <Bar dataKey="yield" name="Rendimento" fill={INCOME_COLOR} radius={[4, 4, 4, 4]} maxBarSize={28} />
+        <Bar dataKey="yield" name={tr("Rendimento", "Yield")} fill={INCOME_COLOR} radius={[4, 4, 4, 4]} maxBarSize={28} />
       </BarChart>
     </ResponsiveContainer>
   );

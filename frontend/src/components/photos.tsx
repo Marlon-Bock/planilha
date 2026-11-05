@@ -8,14 +8,15 @@ import { cn } from "@/lib/format";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/components/auth";
 import { Button, Card } from "@/components/ui";
+import { tr } from "@/lib/i18n";
 
 export type PhotoSlot = "avatar" | "cover" | "background";
 
 /** Lugares onde dá para colocar foto. O tamanho máximo vale para o lado maior. */
-const SLOTS: { slot: PhotoSlot; key: "avatar_url" | "cover_url" | "background_url"; title: string; hint: string; max: number }[] = [
-  { slot: "avatar", key: "avatar_url", title: "Foto de perfil", hint: "Aparece no menu e na saudação do Dashboard", max: 600 },
-  { slot: "cover", key: "cover_url", title: "Capa do Dashboard", hint: "Banner no topo do Dashboard. De preferência uma foto deitada", max: 1800 },
-  { slot: "background", key: "background_url", title: "Fundo do app", hint: "Fica bem clarinha atrás das telas, sem atrapalhar a leitura", max: 1920 },
+const slots = (): { slot: PhotoSlot; key: "avatar_url" | "cover_url" | "background_url"; title: string; hint: string; max: number }[] => [
+  { slot: "avatar", key: "avatar_url", title: tr("Foto de perfil", "Profile photo"), hint: tr("Aparece no menu e na saudação do Dashboard", "Shown in the menu and in the Dashboard greeting"), max: 600 },
+  { slot: "cover", key: "cover_url", title: tr("Capa do Dashboard", "Dashboard cover"), hint: tr("Banner no topo do Dashboard. De preferência uma foto deitada", "Banner at the top of the Dashboard. A landscape photo works best"), max: 1800 },
+  { slot: "background", key: "background_url", title: tr("Fundo do app", "App background"), hint: tr("Fica bem clarinha atrás das telas, sem atrapalhar a leitura", "Shown very lightly behind the screens, without hurting readability"), max: 1920 },
 ];
 
 /**
@@ -99,7 +100,7 @@ function CoverFramer({ url, position, busy }: { url: string; position: number; b
     try {
       const { data } = await api.patch<{ user: User }>("/profile/photos/cover/position", { position: value });
       setUser(data.user);
-      toast.success("Enquadramento salvo 📸");
+      toast.success(tr("Enquadramento salvo 📸", "Framing saved 📸"));
     } catch (err) {
       setPos(position);
       toast.error(parseError(err).message);
@@ -130,10 +131,10 @@ function CoverFramer({ url, position, busy }: { url: string; position: number; b
         className="pointer-events-none h-full w-full object-cover" style={{ objectPosition: `50% ${pos}%` }} />
       {range >= 2 && !busy && (
         <span className={cn("pointer-events-none absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-slate-950/60 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur transition-opacity", dragging && "opacity-0")}>
-          ↕ Arraste para ajustar
+          {tr("↕ Arraste para ajustar", "↕ Drag to adjust")}
         </span>
       )}
-      {busy && <span className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs font-medium text-brand-600 dark:bg-slate-900/70">Enviando…</span>}
+      {busy && <span className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs font-medium text-brand-600 dark:bg-slate-900/70">{tr("Enviando…", "Uploading…")}</span>}
     </div>
   );
 }
@@ -147,7 +148,7 @@ function PhotoTile({ slot, title, hint, max, url, position }: { slot: PhotoSlot;
     const file = e.target.files?.[0];
     e.target.value = ""; // permite escolher a mesma foto de novo
     if (!file) return;
-    if (!file.type.startsWith("image/")) return void toast.error("Escolha um arquivo de imagem");
+    if (!file.type.startsWith("image/")) return void toast.error(tr("Escolha um arquivo de imagem", "Choose an image file"));
     setBusy("up");
     try {
       const blob = await shrink(file, max);
@@ -155,7 +156,7 @@ function PhotoTile({ slot, title, hint, max, url, position }: { slot: PhotoSlot;
       form.append("photo", blob, blob === file ? file.name : `${slot}.jpg`);
       const { data } = await api.post<{ user: User }>(`/profile/photos/${slot}`, form);
       setUser(data.user);
-      toast.success(`${title} atualizada 💕`);
+      toast.success(tr(`${title} atualizada 💕`, `${title} updated 💕`));
     } catch (err) {
       toast.error(parseError(err).message);
     } finally { setBusy(null); }
@@ -166,7 +167,7 @@ function PhotoTile({ slot, title, hint, max, url, position }: { slot: PhotoSlot;
     try {
       const { data } = await api.delete<{ user: User }>(`/profile/photos/${slot}`);
       setUser(data.user);
-      toast.success(`${title} removida`);
+      toast.success(tr(`${title} removida`, `${title} removed`));
     } catch (err) {
       toast.error(parseError(err).message);
     } finally { setBusy(null); }
@@ -183,16 +184,16 @@ function PhotoTile({ slot, title, hint, max, url, position }: { slot: PhotoSlot;
       ) : (
       <button type="button" onClick={() => input.current?.click()} disabled={!!busy}
         className={cn("group relative overflow-hidden border-2 border-dashed border-brand-200 bg-brand-50/60 transition hover:border-brand-400 dark:border-brand-500/30 dark:bg-brand-500/5", url && "border-solid border-transparent", preview)}
-        aria-label={url ? `Trocar ${title.toLowerCase()}` : `Escolher ${title.toLowerCase()}`}>
+        aria-label={url ? tr(`Trocar ${title.toLowerCase()}`, `Change ${title.toLowerCase()}`) : tr(`Escolher ${title.toLowerCase()}`, `Choose ${title.toLowerCase()}`)}>
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt="" className="h-full w-full object-cover" />
         ) : (
           <span className="flex h-full w-full flex-col items-center justify-center gap-1 text-xs font-medium text-brand-500">
-            <ImagePlus className="h-6 w-6" /> {slot === "avatar" ? "" : "Escolher foto"}
+            <ImagePlus className="h-6 w-6" /> {slot === "avatar" ? "" : tr("Escolher foto", "Choose photo")}
           </span>
         )}
-        {busy === "up" && <span className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs font-medium text-brand-600 dark:bg-slate-900/70">Enviando…</span>}
+        {busy === "up" && <span className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs font-medium text-brand-600 dark:bg-slate-900/70">{tr("Enviando…", "Uploading…")}</span>}
       </button>
       )}
       <div className="min-w-0">
@@ -201,11 +202,11 @@ function PhotoTile({ slot, title, hint, max, url, position }: { slot: PhotoSlot;
       </div>
       <div className="mt-auto flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={() => input.current?.click()} loading={busy === "up"} disabled={!!busy}>
-          <ImagePlus className="h-4 w-4" /> {url ? "Trocar" : "Escolher"}
+          <ImagePlus className="h-4 w-4" /> {url ? tr("Trocar", "Change") : tr("Escolher", "Choose")}
         </Button>
         {url && (
           <Button size="sm" variant="ghost" onClick={remove} loading={busy === "del"} disabled={!!busy}>
-            <Trash2 className="h-4 w-4" /> Remover
+            <Trash2 className="h-4 w-4" /> {tr("Remover", "Remove")}
           </Button>
         )}
       </div>
@@ -219,11 +220,11 @@ export function PhotosCard({ className }: { className?: string }) {
   const { user } = useAuth();
   if (!user) return null;
   return (
-    <Card title="Nossas fotos 📸" className={className}>
+    <Card title={tr("Nossas fotos 📸", "Our photos 📸")} className={className}>
       <div className="grid gap-3 sm:grid-cols-3">
-        {SLOTS.map((s) => <PhotoTile key={s.slot} slot={s.slot} title={s.title} hint={s.hint} max={s.max} url={user[s.key] ?? null} position={s.slot === "cover" ? user.cover_position : undefined} />)}
+        {slots().map((s) => <PhotoTile key={s.slot} slot={s.slot} title={s.title} hint={s.hint} max={s.max} url={user[s.key] ?? null} position={s.slot === "cover" ? user.cover_position : undefined} />)}
       </div>
-      <p className="mt-3 text-xs text-slate-500">As fotos ficam guardadas no servidor do app e só aparecem para quem está logado nesta conta.</p>
+      <p className="mt-3 text-xs text-slate-500">{tr("As fotos ficam guardadas no servidor do app e só aparecem para quem está logado nesta conta.", "Photos are stored on the app's server and only shown to whoever is signed in to this account.")}</p>
     </Card>
   );
 }

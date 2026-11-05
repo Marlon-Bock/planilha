@@ -6,10 +6,11 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import {
-  ArrowLeftRight, Bell, ChartLine, ChevronsUpDown, ShieldCheck, ChartColumn, LayoutDashboard, LogOut, Moon, PiggyBank, Plus, Repeat, Sun, Tags,
+  ArrowLeftRight, Bell, ChartLine, Languages, ChevronsUpDown, ShieldCheck, ChartColumn, LayoutDashboard, LogOut, Moon, PiggyBank, Plus, Repeat, Sun, Tags,
   Target, UserCog, Users, Wallet, type LucideIcon,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { getLang, setLang, tr } from "@/lib/i18n";
 import { cn, fmtDate, isInvestmentTx } from "@/lib/format";
 import { toast } from "sonner";
 import { rememberNext, resolveLink } from "@/lib/navigation";
@@ -34,17 +35,18 @@ interface TxFormCtx {
 const TxFormContext = createContext<TxFormCtx | null>(null);
 export const useTxForm = () => useContext(TxFormContext)!;
 
-const nav: { href: string; label: string; icon: LucideIcon }[] = [
+// Função (e não constante) para os rótulos virem no idioma atual.
+const navItems = (): { href: string; label: string; icon: LucideIcon }[] => [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/transacoes", label: "Lançamentos", icon: ArrowLeftRight },
-  { href: "/contas", label: "Contas e cartões", icon: Wallet },
-  { href: "/categorias", label: "Categorias e tags", icon: Tags },
-  { href: "/orcamentos", label: "Orçamentos", icon: PiggyBank },
-  { href: "/investimentos", label: "Investimentos", icon: ChartLine },
-  { href: "/metas", label: "Metas", icon: Target },
-  { href: "/recorrentes", label: "Recorrentes", icon: Repeat },
-  { href: "/relatorios", label: "Relatórios", icon: ChartColumn },
-  { href: "/avisos", label: "Avisos", icon: Bell },
+  { href: "/transacoes", label: tr("Lançamentos", "Transactions"), icon: ArrowLeftRight },
+  { href: "/contas", label: tr("Contas e cartões", "Accounts & cards"), icon: Wallet },
+  { href: "/categorias", label: tr("Categorias e tags", "Categories & tags"), icon: Tags },
+  { href: "/orcamentos", label: tr("Orçamentos", "Budgets"), icon: PiggyBank },
+  { href: "/investimentos", label: tr("Investimentos", "Investments"), icon: ChartLine },
+  { href: "/metas", label: tr("Metas", "Goals"), icon: Target },
+  { href: "/recorrentes", label: tr("Recorrentes", "Recurring"), icon: Repeat },
+  { href: "/relatorios", label: tr("Relatórios", "Reports"), icon: ChartColumn },
+  { href: "/avisos", label: tr("Avisos", "Alerts"), icon: Bell },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -72,7 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const openEdit = useCallback((t: Transaction) => {
     // Aplicações/resgates são controlados pelo investimento.
     if (isInvestmentTx(t.type)) {
-      toast.info(`${t.type === "invest" ? "Aplicações" : "Resgates"} são editados na tela de Investimentos`);
+      toast.info(t.type === "invest" ? tr("Aplicações são editadas na tela de Investimentos", "Deposits are edited on the Investments screen") : tr("Resgates são editados na tela de Investimentos", "Withdrawals are edited on the Investments screen"));
       router.push("/investimentos");
       return;
     }
@@ -88,7 +90,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const items = user.role === "admin" ? [...nav, { href: "/admin/usuarios", label: "Usuários", icon: Users }] : nav;
+  const nav = navItems();
+  const items = user.role === "admin" ? [...nav, { href: "/admin/usuarios", label: tr("Usuários", "Users"), icon: Users }] : nav;
 
   const sidebar = (
     <div className="flex h-full flex-col">
@@ -100,7 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <span className="min-w-0 leading-tight">
           <span className="block text-lg font-bold tracking-tight text-slate-900 dark:text-white">Planilha</span>
           <span className="block truncate text-xs font-medium text-brand-600 dark:text-brand-400">
-            {user.partner_name ? `${firstName(user.name)} & ${firstName(user.partner_name)}` : "do casal"}
+            {user.partner_name ? `${firstName(user.name)} & ${firstName(user.partner_name)}` : tr("do casal", "for couples")}
           </span>
         </span>
       </Link>
@@ -149,10 +152,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <div className="flex-1" />
             <InstallButton variant="ghost" className="hidden px-3 lg:inline-flex" />
+            <LangToggle />
             <span className="hidden lg:contents"><ThemeToggle /></span>
             <NotificationBell />
             <button onClick={() => openNew()} className="hidden h-10 items-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-medium text-white shadow-sm hover:bg-brand-700 lg:inline-flex">
-              <Plus className="h-4 w-4" /> Novo lançamento
+              <Plus className="h-4 w-4" /> {tr("Novo lançamento", "New transaction")}
             </button>
           </div>
         </header>
@@ -168,7 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <MoreSheet open={moreOpen} onClose={closeMore} user={user} onLogout={logout}
         items={[
           ...items.filter((i) => !["/dashboard", "/transacoes", "/investimentos"].includes(i.href)),
-          { href: "/perfil", label: "Meu perfil", icon: UserCog },
+          { href: "/perfil", label: tr("Meu perfil", "My profile"), icon: UserCog },
         ]} />
       <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} transaction={editing} defaults={defaults} />
       <PetBuddy />
@@ -190,7 +194,7 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{user.name}</span>
-            {user.role === "admin" && <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-brand-500" aria-label="Administrador" />}
+            {user.role === "admin" && <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-brand-500" aria-label={tr("Administrador", "Administrator")} />}
           </span>
           <span className="block truncate text-xs text-slate-500">{user.email}</span>
         </span>
@@ -200,21 +204,21 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
         <PopoverPanel panelRef={panelRef}>
           <div role="menu" className="p-1.5" onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } }}>
             <div className="px-3 pt-1.5 pb-2">
-              <p className="text-xs text-slate-500">Conectado como</p>
+              <p className="text-xs text-slate-500">{tr("Conectado como", "Signed in as")}</p>
               <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{user.email}</p>
             </div>
             <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
             <Link role="menuitem" href="/perfil" onClick={() => close(false)} className={cn(item, "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800")}>
-              <UserCog className="h-4 w-4 text-slate-400" /> Meu perfil
+              <UserCog className="h-4 w-4 text-slate-400" /> {tr("Meu perfil", "My profile")}
             </Link>
             {user.role === "admin" && (
               <Link role="menuitem" href="/admin/usuarios" onClick={() => close(false)} className={cn(item, "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800")}>
-                <Users className="h-4 w-4 text-slate-400" /> Gerenciar usuários
+                <Users className="h-4 w-4 text-slate-400" /> {tr("Gerenciar usuários", "Manage users")}
               </Link>
             )}
             <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
             <button role="menuitem" type="button" onClick={onLogout} className={cn(item, "text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10")}>
-              <LogOut className="h-4 w-4" /> Sair da conta
+              <LogOut className="h-4 w-4" /> {tr("Sair da conta", "Sign out")}
             </button>
           </div>
         </PopoverPanel>
@@ -223,11 +227,24 @@ function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
   );
 }
 
+/** Troca o idioma (português ⇄ inglês). */
+function LangToggle() {
+  const en = getLang() === "en";
+  return (
+    <button onClick={() => setLang(en ? "pt-BR" : "en")}
+      className="flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+      aria-label={en ? "Mudar para português" : "Switch to English"} title={en ? "Mudar para português" : "Switch to English"}>
+      <Languages className="h-5 w-5" />
+      <span>{en ? "EN" : "PT"}</span>
+    </button>
+  );
+}
+
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   // Os dois ícones são renderizados e o CSS escolhe — evita divergência de hidratação.
   return (
-    <button onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" aria-label="Alternar tema">
+    <button onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" aria-label={tr("Alternar tema", "Toggle theme")}>
       <Sun className="hidden h-5 w-5 dark:block" />
       <Moon className="h-5 w-5 dark:hidden" />
     </button>
@@ -265,7 +282,7 @@ function NotificationBell() {
 
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(!open)} className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" aria-label="Avisos">
+      <button onClick={() => setOpen(!open)} className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" aria-label={tr("Avisos", "Alerts")}>
         <Bell className="h-5 w-5" />
         {unread > 0 && (
           <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">{unread > 9 ? "9+" : unread}</span>
@@ -274,12 +291,12 @@ function NotificationBell() {
       {open && (
         <div className="absolute right-0 z-40 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-            <span className="text-sm font-semibold">Avisos</span>
+            <span className="text-sm font-semibold">{tr("Avisos", "Alerts")}</span>
             {unread > 0 && (
               <button className="text-xs text-brand-600 hover:underline" onClick={async () => {
                 await api.post("/notifications/read-all");
                 qc.invalidateQueries({ queryKey: ["notifications"] });
-              }}>Marcar todos como lidos</button>
+              }}>{tr("Marcar todos como lidos", "Mark all as read")}</button>
             )}
           </div>
           <div className="max-h-96 overflow-y-auto">
@@ -289,13 +306,13 @@ function NotificationBell() {
                 <span className="min-w-0">
                   <span className="block text-sm font-medium text-slate-800 dark:text-slate-100">{n.title}</span>
                   <span className="line-clamp-2 block text-xs text-slate-500">{n.message}</span>
-                  <span className="mt-0.5 block text-[11px] text-slate-400">{fmtDate(n.created_at, "dd/MM 'às' HH:mm")}</span>
+                  <span className="mt-0.5 block text-[11px] text-slate-400">{fmtDate(n.created_at, tr("dd/MM 'às' HH:mm", "MM/dd 'at' h:mm a"))}</span>
                 </span>
               </button>
-            )) : <p className="px-4 py-8 text-center text-sm text-slate-500">Nenhum aviso por aqui 🎉</p>}
+            )) : <p className="px-4 py-8 text-center text-sm text-slate-500">{tr("Nenhum aviso por aqui 🎉", "No alerts here 🎉")}</p>}
           </div>
           <Link href="/avisos" onClick={() => setOpen(false)} className="block border-t border-slate-100 py-2.5 text-center text-sm font-medium text-brand-600 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800">
-            Ver todos
+            {tr("Ver todos", "See all")}
           </Link>
         </div>
       )}

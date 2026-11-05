@@ -9,6 +9,7 @@ import { fmtDate } from "@/lib/format";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/components/auth";
 import { Badge, Button, Card, ConfirmDialog, EmptyState, Field, Input, Modal, PageHeader, Pagination, Select, Skeleton } from "@/components/ui";
+import { tr } from "@/lib/i18n";
 
 interface Stats { users: number; active: number; admins: number; new_this_month: number; active_last_7_days: number; transactions: number }
 
@@ -35,7 +36,7 @@ export default function AdminUsersPage() {
   const patch = async (u: User, body: Partial<User>) => {
     try {
       await api.put(`/admin/users/${u.id}`, body);
-      toast.success("Usuário atualizado");
+      toast.success(tr("Usuário atualizado", "User updated"));
       refresh();
     } catch (e) { toast.error(parseError(e).message); }
   };
@@ -43,24 +44,24 @@ export default function AdminUsersPage() {
   const remove = async () => {
     try {
       await api.delete(`/admin/users/${toDelete!.id}`);
-      toast.success("Usuário excluído");
+      toast.success(tr("Usuário excluído", "User deleted"));
       refresh();
     } catch (e) { toast.error(parseError(e).message); } finally { setToDelete(null); }
   };
 
-  if (me?.role !== "admin") return <EmptyState icon={<ShieldCheck className="h-6 w-6" />} title="Acesso restrito" description="Somente administradores podem ver esta página." />;
-  if (error) return <EmptyState title="Não foi possível carregar os usuários" />;
+  if (me?.role !== "admin") return <EmptyState icon={<ShieldCheck className="h-6 w-6" />} title={tr("Acesso restrito", "Restricted access")} description={tr("Somente administradores podem ver esta página.", "Only admins can see this page.")} />;
+  if (error) return <EmptyState title={tr("Não foi possível carregar os usuários", "Couldn't load the users")} />;
 
   const s = data?.stats;
 
   return (
     <>
-      <PageHeader title="Usuários" description="Administração dos usuários do sistema"
-        actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> Novo usuário</Button>} />
+      <PageHeader title={tr("Usuários", "Users")} description={tr("Administração dos usuários do sistema", "Manage the system's users")}
+        actions={<Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4" /> {tr("Novo usuário", "New user")}</Button>} />
 
       {s && (
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {[["Usuários", s.users], ["Ativos", s.active], ["Admins", s.admins], ["Novos no mês", s.new_this_month], ["Acessaram (7 dias)", s.active_last_7_days], ["Lançamentos", s.transactions]].map(([l, v]) => (
+          {[[tr("Usuários", "Users"), s.users], [tr("Ativos", "Active"), s.active], ["Admins", s.admins], [tr("Novos no mês", "New this month"), s.new_this_month], [tr("Acessaram (7 dias)", "Signed in (7 days)"), s.active_last_7_days], [tr("Lançamentos", "Transactions"), s.transactions]].map(([l, v]) => (
             <div key={l} className="rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
               <p className="text-xs text-slate-500">{l}</p><p className="tabular text-xl font-bold text-slate-900 dark:text-white">{v}</p>
             </div>
@@ -71,10 +72,10 @@ export default function AdminUsersPage() {
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative min-w-0 flex-1 basis-60">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail" className="pl-9" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr("Buscar por nome ou e-mail", "Search by name or email")} className="pl-9" />
         </div>
         <Select value={role} onChange={(e) => { setRole(e.target.value); setPage(1); }} className="w-auto">
-          <option value="">Todos os perfis</option><option value="admin">Administradores</option><option value="user">Usuários</option>
+          <option value="">{tr("Todos os perfis", "All roles")}</option><option value="admin">{tr("Administradores", "Admins")}</option><option value="user">{tr("Usuários", "Users")}</option>
         </Select>
       </div>
 
@@ -88,48 +89,48 @@ export default function AdminUsersPage() {
                   {u.name.charAt(0).toUpperCase()}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-slate-800 dark:text-slate-100">{u.name}{u.id === me.id && <span className="ml-1 text-xs text-slate-400">(você)</span>}</p>
+                  <p className="truncate font-medium text-slate-800 dark:text-slate-100">{u.name}{u.id === me.id && <span className="ml-1 text-xs text-slate-400">{tr("(você)", "(you)")}</span>}</p>
                   <p className="truncate text-xs text-slate-500">{u.email}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {u.transactions_count} lançamentos · {u.last_login_at ? `acesso ${fmtDate(u.last_login_at, "dd/MM HH:mm")}` : "nunca acessou"}
+                    {tr(`${u.transactions_count} lançamentos`, `${u.transactions_count} transactions`)} · {u.last_login_at ? tr(`acesso ${fmtDate(u.last_login_at, "dd/MM HH:mm")}`, `signed in ${fmtDate(u.last_login_at, "dd/MM HH:mm")}`) : tr("nunca acessou", "never signed in")}
                   </p>
                   <div className="mt-2 flex items-center gap-2">
                     <Select value={u.role} disabled={u.id === me.id} onChange={(e) => patch(u, { role: e.target.value as User["role"] })} className="h-8 w-auto text-xs">
-                      <option value="user">Usuário</option><option value="admin">Admin</option>
+                      <option value="user">{tr("Usuário", "User")}</option><option value="admin">Admin</option>
                     </Select>
                     <button disabled={u.id === me.id} onClick={() => patch(u, { is_active: !u.is_active })}>
-                      {u.is_active ? <Badge tone="green">Ativo</Badge> : <Badge tone="red">Desativado</Badge>}
+                      {u.is_active ? <Badge tone="green">{tr("Ativo", "Active")}</Badge> : <Badge tone="red">{tr("Desativado", "Disabled")}</Badge>}
                     </button>
                   </div>
                 </div>
-                {u.id !== me.id && <button onClick={() => setToDelete(u)} className="rounded-lg p-2.5 text-slate-300 active:text-rose-600" aria-label={`Excluir ${u.name}`}><Trash2 className="h-4.5 w-4.5" /></button>}
+                {u.id !== me.id && <button onClick={() => setToDelete(u)} className="rounded-lg p-2.5 text-slate-300 active:text-rose-600" aria-label={tr(`Excluir ${u.name}`, `Delete ${u.name}`)}><Trash2 className="h-4.5 w-4.5" /></button>}
               </li>
             ))}
           </ul>
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] text-sm">
               <thead className="bg-slate-50 text-left text-xs text-slate-500 uppercase dark:bg-slate-800/50">
-                <tr><th className="px-5 py-3">Usuário</th><th className="px-3 py-3">Perfil</th><th className="px-3 py-3">Status</th><th className="px-3 py-3">Lançamentos</th><th className="px-3 py-3">Último acesso</th><th className="px-3 py-3">Cadastro</th><th className="w-12" /></tr>
+                <tr><th className="px-5 py-3">{tr("Usuário", "User")}</th><th className="px-3 py-3">{tr("Perfil", "Role")}</th><th className="px-3 py-3">Status</th><th className="px-3 py-3">{tr("Lançamentos", "Transactions")}</th><th className="px-3 py-3">{tr("Último acesso", "Last sign-in")}</th><th className="px-3 py-3">{tr("Cadastro", "Created")}</th><th className="w-12" /></tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {data?.data.map((u) => (
                   <tr key={u.id}>
-                    <td className="px-5 py-3"><p className="font-medium text-slate-800 dark:text-slate-100">{u.name}{u.id === me.id && <span className="ml-1 text-xs text-slate-400">(você)</span>}</p><p className="text-xs text-slate-500">{u.email}</p></td>
+                    <td className="px-5 py-3"><p className="font-medium text-slate-800 dark:text-slate-100">{u.name}{u.id === me.id && <span className="ml-1 text-xs text-slate-400">{tr("(você)", "(you)")}</span>}</p><p className="text-xs text-slate-500">{u.email}</p></td>
                     <td className="px-3 py-3">
                       <Select value={u.role} disabled={u.id === me.id} onChange={(e) => patch(u, { role: e.target.value as User["role"] })} className="h-8 w-auto text-xs">
-                        <option value="user">Usuário</option><option value="admin">Admin</option>
+                        <option value="user">{tr("Usuário", "User")}</option><option value="admin">Admin</option>
                       </Select>
                     </td>
                     <td className="px-3 py-3">
-                      <button disabled={u.id === me.id} onClick={() => patch(u, { is_active: !u.is_active })} title="Clique para ativar/desativar">
-                        {u.is_active ? <Badge tone="green">Ativo</Badge> : <Badge tone="red">Desativado</Badge>}
+                      <button disabled={u.id === me.id} onClick={() => patch(u, { is_active: !u.is_active })} title={tr("Clique para ativar/desativar", "Click to enable/disable")}>
+                        {u.is_active ? <Badge tone="green">{tr("Ativo", "Active")}</Badge> : <Badge tone="red">{tr("Desativado", "Disabled")}</Badge>}
                       </button>
                     </td>
                     <td className="tabular px-3 py-3 text-slate-600 dark:text-slate-400">{u.transactions_count}</td>
-                    <td className="px-3 py-3 text-slate-600 dark:text-slate-400">{u.last_login_at ? fmtDate(u.last_login_at, "dd/MM/yyyy HH:mm") : "Nunca"}</td>
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-400">{u.last_login_at ? fmtDate(u.last_login_at, "dd/MM/yyyy HH:mm") : tr("Nunca", "Never")}</td>
                     <td className="px-3 py-3 text-slate-600 dark:text-slate-400">{fmtDate(u.created_at)}</td>
                     <td className="px-3 py-3">
-                      {u.id !== me.id && <button onClick={() => setToDelete(u)} className="rounded-md p-1.5 text-slate-400 hover:text-rose-600" aria-label="Excluir"><Trash2 className="h-4 w-4" /></button>}
+                      {u.id !== me.id && <button onClick={() => setToDelete(u)} className="rounded-md p-1.5 text-slate-400 hover:text-rose-600" aria-label={tr("Excluir", "Delete")}><Trash2 className="h-4 w-4" /></button>}
                     </td>
                   </tr>
                 ))}
@@ -142,8 +143,8 @@ export default function AdminUsersPage() {
       </Card>
 
       <CreateUser open={createOpen} onClose={() => setCreateOpen(false)} onCreated={refresh} />
-      <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={remove} title="Excluir usuário" confirmLabel="Excluir"
-        message={<>Excluir <strong>{toDelete?.name}</strong> e <strong>todos os dados financeiros</strong> dele? Essa ação não pode ser desfeita.</>} />
+      <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={remove} title={tr("Excluir usuário", "Delete user")} confirmLabel={tr("Excluir", "Delete")}
+        message={<>{tr("Excluir ", "Delete ")}<strong>{toDelete?.name}</strong>{tr(" e ", " and ")}<strong>{tr("todos os dados financeiros", "all financial data")}</strong>{tr(" dele? Essa ação não pode ser desfeita.", "? This can't be undone.")}</>} />
     </>
   );
 }
@@ -164,7 +165,7 @@ function CreateUserInner({ onClose, onCreated }: CreateUserProps) {
     setSaving(true);
     try {
       await api.post("/admin/users", form);
-      toast.success("Usuário criado");
+      toast.success(tr("Usuário criado", "User created"));
       onCreated();
       onClose();
     } catch (err) {
@@ -175,13 +176,13 @@ function CreateUserInner({ onClose, onCreated }: CreateUserProps) {
   };
 
   return (
-    <Modal open onClose={onClose} title="Novo usuário" size="sm"
-      footer={<><Button variant="ghost" onClick={onClose}>Cancelar</Button><Button type="submit" form="user-form" loading={saving}>Criar</Button></>}>
+    <Modal open onClose={onClose} title={tr("Novo usuário", "New user")} size="sm"
+      footer={<><Button variant="ghost" onClick={onClose}>{tr("Cancelar", "Cancel")}</Button><Button type="submit" form="user-form" loading={saving}>{tr("Criar", "Create")}</Button></>}>
       <form id="user-form" onSubmit={submit} className="space-y-4">
-        <Field label="Nome" error={errors.name}><Input placeholder="Nome completo" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-        <Field label="E-mail" error={errors.email}><Input placeholder="nome@exemplo.com" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-        <Field label="Senha inicial" error={errors.password}><Input placeholder="Mínimo de 8 caracteres" type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
-        <Field label="Perfil"><Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="user">Usuário</option><option value="admin">Administrador</option></Select></Field>
+        <Field label={tr("Nome", "Name")} error={errors.name}><Input placeholder={tr("Nome completo", "Full name")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+        <Field label={tr("E-mail", "Email")} error={errors.email}><Input placeholder={tr("nome@exemplo.com", "name@example.com")} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+        <Field label={tr("Senha inicial", "Initial password")} error={errors.password}><Input placeholder={tr("Mínimo de 8 caracteres", "At least 8 characters")} type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
+        <Field label={tr("Perfil", "Role")}><Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}><option value="user">{tr("Usuário", "User")}</option><option value="admin">{tr("Administrador", "Administrator")}</option></Select></Field>
       </form>
     </Modal>
   );

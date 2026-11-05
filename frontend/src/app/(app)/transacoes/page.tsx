@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { useTxForm } from "@/components/app-shell";
 import { burstFrom } from "@/components/cute";
 import { MobileStatement, TxActionSheet } from "@/components/mobile-statement";
+import { tr } from "@/lib/i18n";
 
 interface Filters {
   period: "month" | "range" | "all";
@@ -138,7 +139,7 @@ export default function TransactionsPage() {
 
   const duplicate = async (t: Transaction) => {
     await api.post(`/transactions/${t.id}/duplicate`);
-    toast.success("Lançamento duplicado para o mês seguinte");
+    toast.success(tr("Lançamento duplicado para o mês seguinte", "Transaction duplicated to next month"));
     invalidate();
   };
 
@@ -147,7 +148,7 @@ export default function TransactionsPage() {
     setBusy(true);
     try {
       const { data } = await api.delete<{ deleted: number }>(`/transactions/${toDelete.id}`, { params: { scope: deleteScope } });
-      toast.success(data.deleted > 1 ? `${data.deleted} lançamentos excluídos` : "Lançamento excluído");
+      toast.success(data.deleted > 1 ? tr(`${data.deleted} lançamentos excluídos`, `${data.deleted} transactions deleted`) : tr("Lançamento excluído", "Transaction deleted"));
       setToDelete(null);
       invalidate();
     } finally { setBusy(false); }
@@ -157,7 +158,7 @@ export default function TransactionsPage() {
     setBusy(true);
     try {
       const { data } = await api.post<{ affected: number }>("/transactions/bulk", { ids: selected, action, ...extra });
-      toast.success(`${data.affected} lançamento(s) atualizado(s)`);
+      toast.success(tr(`${data.affected} lançamento(s) atualizado(s)`, `${data.affected} transaction(s) updated`));
       setSelected([]);
       setBulkDelete(false);
       setBulkCategory(false);
@@ -170,72 +171,72 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <PageHeader title="Lançamentos" description="Sua planilha de receitas e despesas"
+      <PageHeader title={tr("Lançamentos", "Transactions")} description={tr("Sua planilha de receitas e despesas", "Your income and expense sheet")}
         actions={<>
           <a href={exportUrl} className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
-            <Download className="h-4 w-4" /> Exportar CSV
+            <Download className="h-4 w-4" /> {tr("Exportar CSV", "Export CSV")}
           </a>
           {/* No celular o "+" da barra de baixo faz isso. */}
-          <Button onClick={() => openNew()} className="hidden lg:inline-flex">Novo lançamento</Button>
+          <Button onClick={() => openNew()} className="hidden lg:inline-flex">{tr("Novo lançamento", "New transaction")}</Button>
         </>} />
 
       {/* Barra de filtros */}
       <Card className="mb-4" padded={false}>
         <div className="flex flex-wrap items-center gap-2 p-3">
           <Select value={filters.period} onChange={(e) => update({ period: e.target.value as Filters["period"] })} className="w-auto">
-            <option value="month">Mês</option>
-            <option value="range">Período</option>
-            <option value="all">Tudo</option>
+            <option value="month">{tr("Mês", "Month")}</option>
+            <option value="range">{tr("Período", "Date range")}</option>
+            <option value="all">{tr("Tudo", "All time")}</option>
           </Select>
           {filters.period === "month" && <MonthPicker value={filters.month} onChange={(m) => update({ month: m })} />}
           {filters.period === "range" && (
             <div className="flex items-center gap-2">
-              <DatePicker value={filters.from} onChange={(v) => update({ from: v })} clearable placeholder="dd/mm/aaaa" className="w-44" />
-              <span className="text-slate-400">até</span>
-              <DatePicker value={filters.to} onChange={(v) => update({ to: v })} clearable placeholder="dd/mm/aaaa" className="w-44" />
+              <DatePicker value={filters.from} onChange={(v) => update({ from: v })} clearable placeholder={tr("dd/mm/aaaa", "mm/dd/yyyy")} className="w-44" />
+              <span className="text-slate-400">{tr("até", "to")}</span>
+              <DatePicker value={filters.to} onChange={(v) => update({ to: v })} clearable placeholder={tr("dd/mm/aaaa", "mm/dd/yyyy")} className="w-44" />
             </div>
           )}
           <div className="relative min-w-48 flex-1">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Buscar descrição ou observação..." className="pl-9" />
+            <Input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder={tr("Buscar descrição ou observação...", "Search description or notes...")} className="pl-9" />
           </div>
           <Select value={filters.status} onChange={(e) => update({ status: e.target.value })} className="w-auto">
-            <option value="">Todos os status</option>
-            <option value="paid">Pagos / recebidos</option>
-            <option value="unpaid">Em aberto</option>
-            <option value="pending">A vencer</option>
-            <option value="overdue">Vencidos</option>
+            <option value="">{tr("Todos os status", "All statuses")}</option>
+            <option value="paid">{tr("Pagos / recebidos", "Paid / received")}</option>
+            <option value="unpaid">{tr("Em aberto", "Unpaid")}</option>
+            <option value="pending">{tr("A vencer", "Upcoming")}</option>
+            <option value="overdue">{tr("Vencidos", "Overdue")}</option>
           </Select>
           <Button variant={showFilters || activeCount ? "secondary" : "outline"} onClick={() => setShowFilters(!showFilters)}>
-            <SlidersHorizontal className="h-4 w-4" /> Filtros {activeCount > 0 && <span className="rounded-full bg-brand-600 px-1.5 text-xs text-white">{activeCount}</span>}
+            <SlidersHorizontal className="h-4 w-4" /> {tr("Filtros", "Filters")} {activeCount > 0 && <span className="rounded-full bg-brand-600 px-1.5 text-xs text-white">{activeCount}</span>}
           </Button>
           {(activeCount > 0 || filters.search) && (
             <Button variant="ghost" onClick={() => { setFilters({ ...defaultFilters(), period: filters.period, month: filters.month, from: filters.from, to: filters.to }); setSearchInput(""); }}>
-              <X className="h-4 w-4" /> Limpar
+              <X className="h-4 w-4" /> {tr("Limpar", "Clear")}
             </Button>
           )}
         </div>
         {showFilters && (
           <div className="grid gap-2 border-t border-slate-100 p-3 sm:grid-cols-2 lg:grid-cols-4 dark:border-slate-800">
             <Select value={filters.type} onChange={(e) => update({ type: e.target.value })}>
-              <option value="">Receitas, despesas e transferências</option>
-              <option value="expense">Somente despesas</option>
-              <option value="income">Somente receitas</option>
-              <option value="transfer">Somente transferências</option>
-              <option value="invest">Aplicações em investimentos</option>
-              <option value="redeem">Resgates de investimentos</option>
+              <option value="">{tr("Receitas, despesas e transferências", "Income, expenses and transfers")}</option>
+              <option value="expense">{tr("Somente despesas", "Expenses only")}</option>
+              <option value="income">{tr("Somente receitas", "Income only")}</option>
+              <option value="transfer">{tr("Somente transferências", "Transfers only")}</option>
+              <option value="invest">{tr("Aplicações em investimentos", "Investment deposits")}</option>
+              <option value="redeem">{tr("Resgates de investimentos", "Investment withdrawals")}</option>
             </Select>
-            <MultiSelect label="Contas" options={accounts} value={filters.account_ids} onChange={(v) => update({ account_ids: v })} />
-            <MultiSelect label="Categorias" options={filters.type && filters.type !== "transfer" ? categories.filter((c) => c.type === filters.type) : categories} value={filters.category_ids} onChange={(v) => update({ category_ids: v })} />
+            <MultiSelect label={tr("Contas", "Accounts")} options={accounts} value={filters.account_ids} onChange={(v) => update({ account_ids: v })} />
+            <MultiSelect label={tr("Categorias", "Categories")} options={filters.type && filters.type !== "transfer" ? categories.filter((c) => c.type === filters.type) : categories} value={filters.category_ids} onChange={(v) => update({ category_ids: v })} />
             <MultiSelect label="Tags" options={tags} value={filters.tag_ids} onChange={(v) => update({ tag_ids: v })} />
             <Select value={filters.payment_method} onChange={(e) => update({ payment_method: e.target.value })}>
-              <option value="">Qualquer forma de pagamento</option>
+              <option value="">{tr("Qualquer forma de pagamento", "Any payment method")}</option>
               {Object.entries(PAYMENT_METHODS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </Select>
-            <MoneyInput placeholder="Valor mínimo" value={filters.min_amount} onChange={(_, n) => update({ min_amount: n === null ? "" : String(Math.abs(n)) })} />
-            <MoneyInput placeholder="Valor máximo" value={filters.max_amount} onChange={(_, n) => update({ max_amount: n === null ? "" : String(Math.abs(n)) })} />
+            <MoneyInput placeholder={tr("Valor mínimo", "Min amount")} value={filters.min_amount} onChange={(_, n) => update({ min_amount: n === null ? "" : String(Math.abs(n)) })} />
+            <MoneyInput placeholder={tr("Valor máximo", "Max amount")} value={filters.max_amount} onChange={(_, n) => update({ max_amount: n === null ? "" : String(Math.abs(n)) })} />
             <Select value={filters.per_page} onChange={(e) => update({ per_page: Number(e.target.value) })}>
-              {[25, 50, 100, 200, 500].map((n) => <option key={n} value={n}>{n} por página</option>)}
+              {[25, 50, 100, 200, 500].map((n) => <option key={n} value={n}>{tr(`${n} por página`, `${n} per page`)}</option>)}
             </Select>
           </div>
         )}
@@ -243,22 +244,22 @@ export default function TransactionsPage() {
 
       {/* Totais do filtro */}
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <TotalBox label="Receitas" value={totals?.income} detail={totals && `${money(totals.income_pending)} a receber`} tone="text-teal-600 dark:text-teal-400" />
-        <TotalBox label="Despesas" value={totals?.expense} detail={totals && `${money(totals.expense_pending)} a pagar`} tone="text-rose-600 dark:text-rose-400" />
-        <TotalBox label="Resultado" value={totals?.balance} tone={totals && totals.balance < 0 ? "text-rose-600" : "text-slate-900 dark:text-white"} />
-        <TotalBox label="Lançamentos" raw={totals?.count} />
+        <TotalBox label={tr("Receitas", "Income")} value={totals?.income} detail={totals && tr(`${money(totals.income_pending)} a receber`, `${money(totals.income_pending)} to receive`)} tone="text-teal-600 dark:text-teal-400" />
+        <TotalBox label={tr("Despesas", "Expenses")} value={totals?.expense} detail={totals && tr(`${money(totals.expense_pending)} a pagar`, `${money(totals.expense_pending)} to pay`)} tone="text-rose-600 dark:text-rose-400" />
+        <TotalBox label={tr("Resultado", "Balance")} value={totals?.balance} tone={totals && totals.balance < 0 ? "text-rose-600" : "text-slate-900 dark:text-white"} />
+        <TotalBox label={tr("Lançamentos", "Transactions")} raw={totals?.count} />
       </div>
 
       {/* Ações em massa */}
       {selected.length > 0 && (
         <div className="sticky top-16 z-20 mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm dark:border-brand-500/30 dark:bg-brand-950">
-          <span className="font-medium text-brand-800 dark:text-brand-200">{selected.length} selecionado(s)</span>
+          <span className="font-medium text-brand-800 dark:text-brand-200">{tr(`${selected.length} selecionado(s)`, `${selected.length} selected`)}</span>
           <div className="flex-1" />
-          <Button size="sm" variant="success" loading={busy} onClick={(e) => { burstFrom(e, 16); bulk("pay"); }}><Check className="h-4 w-4" /> Marcar pagos</Button>
-          <Button size="sm" variant="outline" onClick={() => bulk("unpay")}>Marcar em aberto</Button>
-          <Button size="sm" variant="outline" onClick={() => setBulkCategory(true)}>Mudar categoria</Button>
-          <Button size="sm" variant="danger" onClick={() => setBulkDelete(true)}><Trash2 className="h-4 w-4" /> Excluir</Button>
-          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Cancelar</Button>
+          <Button size="sm" variant="success" loading={busy} onClick={(e) => { burstFrom(e, 16); bulk("pay"); }}><Check className="h-4 w-4" /> {tr("Marcar pagos", "Mark paid")}</Button>
+          <Button size="sm" variant="outline" onClick={() => bulk("unpay")}>{tr("Marcar em aberto", "Mark unpaid")}</Button>
+          <Button size="sm" variant="outline" onClick={() => setBulkCategory(true)}>{tr("Mudar categoria", "Change category")}</Button>
+          <Button size="sm" variant="danger" onClick={() => setBulkDelete(true)}><Trash2 className="h-4 w-4" /> {tr("Excluir", "Delete")}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelected([])}>{tr("Cancelar", "Cancel")}</Button>
         </div>
       )}
 
@@ -268,8 +269,8 @@ export default function TransactionsPage() {
         {isLoading ? (
           <div className="space-y-2 p-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
         ) : rows.length === 0 ? (
-          <EmptyState icon={<Search className="h-6 w-6" />} title="Nenhum lançamento encontrado" description="Ajuste os filtros ou adicione um novo lançamento."
-            action={<Button onClick={() => openNew()}>Novo lançamento</Button>} />
+          <EmptyState icon={<Search className="h-6 w-6" />} title={tr("Nenhum lançamento encontrado", "No transactions found")} description={tr("Ajuste os filtros ou adicione um novo lançamento.", "Adjust the filters or add a new transaction.")}
+            action={<Button onClick={() => openNew()}>{tr("Novo lançamento", "New transaction")}</Button>} />
         ) : (
           <>
           {/* Celular: extrato agrupado por dia, como nos apps de banco. */}
@@ -279,14 +280,14 @@ export default function TransactionsPage() {
               <thead className="bg-slate-50 text-left text-xs font-medium tracking-wide text-slate-500 uppercase dark:bg-slate-800/50">
                 <tr>
                   <th className="w-10 px-4 py-3">
-                    <Checkbox checked={allSelected} indeterminate={selected.length > 0 && !allSelected} onChange={() => setSelected(allSelected ? [] : rows.map((r) => r.id))} aria-label="Selecionar todos" />
+                    <Checkbox checked={allSelected} indeterminate={selected.length > 0 && !allSelected} onChange={() => setSelected(allSelected ? [] : rows.map((r) => r.id))} aria-label={tr("Selecionar todos", "Select all")} />
                   </th>
-                  <SortTh col="date" label="Data" f={filters} onSort={sortBy} />
-                  <SortTh col="description" label="Descrição" f={filters} onSort={sortBy} />
-                  <th className="px-3 py-3">Categoria</th>
-                  <th className="px-3 py-3">Conta</th>
+                  <SortTh col="date" label={tr("Data", "Date")} f={filters} onSort={sortBy} />
+                  <SortTh col="description" label={tr("Descrição", "Description")} f={filters} onSort={sortBy} />
+                  <th className="px-3 py-3">{tr("Categoria", "Category")}</th>
+                  <th className="px-3 py-3">{tr("Conta", "Account")}</th>
                   <th className="px-3 py-3">Status</th>
-                  <SortTh col="amount" label="Valor" f={filters} onSort={sortBy} className="text-right" />
+                  <SortTh col="amount" label={tr("Valor", "Amount")} f={filters} onSort={sortBy} className="text-right" />
                   <th className="w-24 px-3 py-3" />
                 </tr>
               </thead>
@@ -294,14 +295,14 @@ export default function TransactionsPage() {
                 {rows.map((t) => (
                   <tr key={t.id} className={cn("group hover:bg-slate-50 dark:hover:bg-slate-800/40", selected.includes(t.id) && "bg-brand-50/60 dark:bg-brand-500/5")}>
                     <td className="px-4 py-2.5">
-                      <Checkbox checked={selected.includes(t.id)} onChange={() => setSelected((s) => s.includes(t.id) ? s.filter((x) => x !== t.id) : [...s, t.id])} aria-label={`Selecionar ${t.description}`} />
+                      <Checkbox checked={selected.includes(t.id)} onChange={() => setSelected((s) => s.includes(t.id) ? s.filter((x) => x !== t.id) : [...s, t.id])} aria-label={tr(`Selecionar ${t.description}`, `Select ${t.description}`)} />
                     </td>
                     <td className="tabular px-3 py-2.5 whitespace-nowrap text-slate-600 dark:text-slate-400">{fmtDate(t.date)}</td>
                     <td className="max-w-72 px-3 py-2.5">
                       <button onClick={() => openEdit(t)} className="block max-w-full truncate text-left font-medium text-slate-800 hover:text-brand-600 dark:text-slate-100">{t.description}</button>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                         {t.installment_total && <span className="inline-flex items-center gap-0.5"><Layers className="h-3 w-3" />{t.installment_number}/{t.installment_total}</span>}
-                        {t.recurring_transaction_id && <span className="inline-flex items-center gap-0.5"><Repeat className="h-3 w-3" />Recorrente</span>}
+                        {t.recurring_transaction_id && <span className="inline-flex items-center gap-0.5"><Repeat className="h-3 w-3" />{tr("Recorrente", "Recurring")}</span>}
                         {t.payment_method && <span>{PAYMENT_METHODS[t.payment_method]}</span>}
                         {t.tags?.map((tag) => <span key={tag.id} className="rounded px-1 text-white" style={{ backgroundColor: tag.color }}>#{tag.name}</span>)}
                       </div>
@@ -310,19 +311,19 @@ export default function TransactionsPage() {
                       {isInvestmentTx(t.type) ? (
                         <span className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-300">
                           <CategoryIcon icon="trending-up" color={t.investment?.color ?? "#7c3aed"} size="sm" />
-                          <span className="truncate">{t.type === "invest" ? "Aplicação →" : "Resgate ←"} {t.investment?.name ?? "investimento excluído"}</span>
+                          <span className="truncate">{t.type === "invest" ? tr("Aplicação →", "Deposit →") : tr("Resgate ←", "Withdrawal ←")} {t.investment?.name ?? tr("investimento excluído", "deleted investment")}</span>
                         </span>
                       ) : t.type === "transfer" ? (
-                        <span className="text-xs text-slate-500">Transferência → {t.transfer_account?.name}</span>
+                        <span className="text-xs text-slate-500">{tr("Transferência", "Transfer")} → {t.transfer_account?.name}</span>
                       ) : t.category ? (
                         <span className="inline-flex items-center gap-2 text-slate-700 dark:text-slate-300"><CategoryIcon icon={t.category.icon} color={t.category.color} size="sm" /><span className="truncate">{t.category.name}</span></span>
-                      ) : <span className="text-xs text-slate-400">Sem categoria</span>}
+                      ) : <span className="text-xs text-slate-400">{tr("Sem categoria", "No category")}</span>}
                     </td>
                     <td className="px-3 py-2.5"><span className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-400"><Dot color={t.account?.color} />{t.account?.name}</span></td>
                     <td className="px-3 py-2.5">
                       {isInvestmentTx(t.type)
                         ? <StatusBadge t={t} />
-                        : <button onClick={(e) => togglePaid(t, e)} title="Clique para alternar o status"><StatusBadge t={t} /></button>}
+                        : <button onClick={(e) => togglePaid(t, e)} title={tr("Clique para alternar o status", "Click to toggle the status")}><StatusBadge t={t} /></button>}
                     </td>
                     <td className={cn("tabular px-3 py-2.5 text-right font-semibold whitespace-nowrap",
                       t.type === "income" ? "text-teal-600 dark:text-teal-400" : t.type === "expense" ? "text-slate-900 dark:text-white" : isInvestmentTx(t.type) ? "text-violet-600 dark:text-violet-400" : "text-slate-500")}>
@@ -330,9 +331,9 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex justify-end gap-0.5 opacity-60 group-hover:opacity-100">
-                        <IconBtn title={isInvestmentTx(t.type) ? "Ver em Investimentos" : "Editar"} onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></IconBtn>
-                        {!isInvestmentTx(t.type) && <IconBtn title="Duplicar no próximo mês" onClick={() => duplicate(t)}><Copy className="h-4 w-4" /></IconBtn>}
-                        <IconBtn title="Excluir" danger onClick={() => { setDeleteScope("this"); setToDelete(t); }}><Trash2 className="h-4 w-4" /></IconBtn>
+                        <IconBtn title={isInvestmentTx(t.type) ? tr("Ver em Investimentos", "View in Investments") : tr("Editar", "Edit")} onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></IconBtn>
+                        {!isInvestmentTx(t.type) && <IconBtn title={tr("Duplicar no próximo mês", "Duplicate to next month")} onClick={() => duplicate(t)}><Copy className="h-4 w-4" /></IconBtn>}
+                        <IconBtn title={tr("Excluir", "Delete")} danger onClick={() => { setDeleteScope("this"); setToDelete(t); }}><Trash2 className="h-4 w-4" /></IconBtn>
                       </div>
                     </td>
                   </tr>
@@ -351,22 +352,22 @@ export default function TransactionsPage() {
         onDuplicate={(t) => { setSheetTx(null); duplicate(t); }}
         onDelete={(t) => { setSheetTx(null); setDeleteScope("this"); setToDelete(t); }} />
 
-      <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={confirmDelete} loading={busy} title="Excluir lançamento" confirmLabel="Excluir"
-        message={<>Excluir <strong>{toDelete?.description}</strong> ({money(toDelete?.amount)})? Essa ação não pode ser desfeita.
-          {toDelete && isInvestmentTx(toDelete.type) && <> A movimentação correspondente no investimento também será removida.</>}</>}>
+      <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={confirmDelete} loading={busy} title={tr("Excluir lançamento", "Delete transaction")} confirmLabel={tr("Excluir", "Delete")}
+        message={<>{tr("Excluir ", "Delete ")}<strong>{toDelete?.description}</strong> ({money(toDelete?.amount)}){tr("? Essa ação não pode ser desfeita.", "? This can't be undone.")}
+          {toDelete && isInvestmentTx(toDelete.type) && <>{tr(" A movimentação correspondente no investimento também será removida.", " The matching investment movement will also be removed.")}</>}</>}>
         {toDelete?.installment_group && (
-          <Field label="Este lançamento é parcelado. Excluir:">
+          <Field label={tr("Este lançamento é parcelado. Excluir:", "This transaction has installments. Delete:")}>
             <Select value={deleteScope} onChange={(e) => setDeleteScope(e.target.value)}>
-              <option value="this">Somente esta parcela</option>
-              <option value="future">Esta e as próximas</option>
-              <option value="all">Todas as parcelas</option>
+              <option value="this">{tr("Somente esta parcela", "Only this installment")}</option>
+              <option value="future">{tr("Esta e as próximas", "This and the next ones")}</option>
+              <option value="all">{tr("Todas as parcelas", "All installments")}</option>
             </Select>
           </Field>
         )}
       </ConfirmDialog>
 
-      <ConfirmDialog open={bulkDelete} onClose={() => setBulkDelete(false)} onConfirm={() => bulk("delete")} loading={busy} title="Excluir lançamentos" confirmLabel="Excluir todos"
-        message={<>Excluir <strong>{selected.length}</strong> lançamento(s) selecionado(s)? Essa ação não pode ser desfeita.</>} />
+      <ConfirmDialog open={bulkDelete} onClose={() => setBulkDelete(false)} onConfirm={() => bulk("delete")} loading={busy} title={tr("Excluir lançamentos", "Delete transactions")} confirmLabel={tr("Excluir todos", "Delete all")}
+        message={<>{tr("Excluir ", "Delete ")}<strong>{selected.length}</strong>{tr(" lançamento(s) selecionado(s)? Essa ação não pode ser desfeita.", " selected transaction(s)? This can't be undone.")}</>} />
 
       <BulkCategoryModal open={bulkCategory} onClose={() => setBulkCategory(false)} onApply={(id) => bulk("category", { category_id: id })} busy={busy} />
     </>
@@ -377,14 +378,14 @@ function BulkCategoryModal({ open, onClose, onApply, busy }: { open: boolean; on
   const { data: categories = [] } = useCategories();
   const [value, setValue] = useState("");
   return (
-    <Modal open={open} onClose={onClose} title="Mudar categoria" size="sm"
-      footer={<><Button variant="ghost" onClick={onClose}>Cancelar</Button><Button disabled={!value} loading={busy} onClick={() => onApply(Number(value))}>Aplicar</Button></>}>
+    <Modal open={open} onClose={onClose} title={tr("Mudar categoria", "Change category")} size="sm"
+      footer={<><Button variant="ghost" onClick={onClose}>{tr("Cancelar", "Cancel")}</Button><Button disabled={!value} loading={busy} onClick={() => onApply(Number(value))}>{tr("Aplicar", "Apply")}</Button></>}>
       <Select value={value} onChange={(e) => setValue(e.target.value)}>
-        <option value="">Selecione</option>
-        <optgroup label="Despesas">{categories.filter((c) => c.type === "expense").map((c) => <option key={c.id} value={c.id} data-color={c.color}>{c.name}</option>)}</optgroup>
-        <optgroup label="Receitas">{categories.filter((c) => c.type === "income").map((c) => <option key={c.id} value={c.id} data-color={c.color}>{c.name}</option>)}</optgroup>
+        <option value="">{tr("Selecione", "Select")}</option>
+        <optgroup label={tr("Despesas", "Expenses")}>{categories.filter((c) => c.type === "expense").map((c) => <option key={c.id} value={c.id} data-color={c.color}>{c.name}</option>)}</optgroup>
+        <optgroup label={tr("Receitas", "Income")}>{categories.filter((c) => c.type === "income").map((c) => <option key={c.id} value={c.id} data-color={c.color}>{c.name}</option>)}</optgroup>
       </Select>
-      <p className="mt-2 text-xs text-slate-500">Transferências selecionadas são ignoradas.</p>
+      <p className="mt-2 text-xs text-slate-500">{tr("Transferências selecionadas são ignoradas.", "Selected transfers are skipped.")}</p>
     </Modal>
   );
 }

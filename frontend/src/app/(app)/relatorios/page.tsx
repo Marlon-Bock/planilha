@@ -9,6 +9,7 @@ import { useAccounts } from "@/lib/queries";
 import type { CategorySlice, EvolutionPoint, Transaction } from "@/lib/types";
 import { Card, Carousel, DatePicker, Dot, EmptyState, MultiSelect, PageHeader, Skeleton } from "@/components/ui";
 import { BalanceChart, CategoryBars, EvolutionChart } from "@/components/charts";
+import { tr } from "@/lib/i18n";
 
 interface Group { label: string; total: number; count: number; percent?: number; color?: string }
 interface Report {
@@ -25,11 +26,11 @@ interface Report {
 
 const d = (x: Date) => format(x, "yyyy-MM-dd");
 const presets = [
-  { label: "Este mês", from: () => d(startOfMonth(new Date())), to: () => d(endOfMonth(new Date())) },
-  { label: "Últimos 3 meses", from: () => d(startOfMonth(subMonths(new Date(), 2))), to: () => d(endOfMonth(new Date())) },
-  { label: "Últimos 6 meses", from: () => d(startOfMonth(subMonths(new Date(), 5))), to: () => d(endOfMonth(new Date())) },
-  { label: "Este ano", from: () => d(startOfYear(new Date())), to: () => d(endOfMonth(new Date())) },
-  { label: "Últimos 12 meses", from: () => d(startOfMonth(subMonths(new Date(), 11))), to: () => d(endOfMonth(new Date())) },
+  { get label() { return tr("Este mês", "This month"); }, from: () => d(startOfMonth(new Date())), to: () => d(endOfMonth(new Date())) },
+  { get label() { return tr("Últimos 3 meses", "Last 3 months"); }, from: () => d(startOfMonth(subMonths(new Date(), 2))), to: () => d(endOfMonth(new Date())) },
+  { get label() { return tr("Últimos 6 meses", "Last 6 months"); }, from: () => d(startOfMonth(subMonths(new Date(), 5))), to: () => d(endOfMonth(new Date())) },
+  { get label() { return tr("Este ano", "This year"); }, from: () => d(startOfYear(new Date())), to: () => d(endOfMonth(new Date())) },
+  { get label() { return tr("Últimos 12 meses", "Last 12 months"); }, from: () => d(startOfMonth(subMonths(new Date(), 11))), to: () => d(endOfMonth(new Date())) },
 ];
 
 export default function ReportsPage() {
@@ -48,7 +49,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Relatórios" description="Analise seus gastos e receitas em qualquer período" />
+      <PageHeader title={tr("Relatórios", "Reports")} description={tr("Analise seus gastos e receitas em qualquer período", "Analyze your spending and income over any period")} />
 
       <Card className="mb-6" padded={false}>
         <div className="flex flex-wrap items-center gap-2 p-3">
@@ -63,56 +64,56 @@ export default function ReportsPage() {
           })}
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <DatePicker value={from} onChange={(v) => setFrom(v)} className="h-9 min-w-0 flex-1 sm:w-44 sm:flex-none" />
-            <span className="text-slate-400">até</span>
+            <span className="text-slate-400">{tr("até", "to")}</span>
             <DatePicker value={to} onChange={(v) => setTo(v)} className="h-9 min-w-0 flex-1 sm:w-44 sm:flex-none" />
           </div>
-          <div className="w-full sm:w-48"><MultiSelect label="Todas as contas" options={accountsData?.data ?? []} value={accountIds} onChange={setAccountIds} /></div>
+          <div className="w-full sm:w-48"><MultiSelect label={tr("Todas as contas", "All accounts")} options={accountsData?.data ?? []} value={accountIds} onChange={setAccountIds} /></div>
         </div>
       </Card>
 
       {isLoading || !s ? <Skeleton className="h-96" /> : (
         <>
           <Carousel className="sm:grid-cols-2 xl:grid-cols-4">
-            <Kpi label="Receitas" value={money(s.income)} sub={`Média ${money(s.avg_monthly_income)}/mês`} tone="text-teal-600 dark:text-teal-400" />
-            <Kpi label="Despesas" value={money(s.expense)} sub={`Média ${money(s.avg_monthly_expense)}/mês · ${money(s.avg_daily_expense)}/dia`} tone="text-rose-600 dark:text-rose-400" />
-            <Kpi label="Resultado" value={money(s.balance)} sub={`${s.transactions} lançamentos`} tone={s.balance < 0 ? "text-rose-600" : undefined} />
-            <Kpi label="Taxa de economia" value={percent(s.savings_rate)} sub="Quanto da receita sobrou" />
+            <Kpi label={tr("Receitas", "Income")} value={money(s.income)} sub={tr(`Média ${money(s.avg_monthly_income)}/mês`, `Avg ${money(s.avg_monthly_income)}/month`)} tone="text-teal-600 dark:text-teal-400" />
+            <Kpi label={tr("Despesas", "Expenses")} value={money(s.expense)} sub={tr(`Média ${money(s.avg_monthly_expense)}/mês · ${money(s.avg_daily_expense)}/dia`, `Avg ${money(s.avg_monthly_expense)}/month · ${money(s.avg_daily_expense)}/day`)} tone="text-rose-600 dark:text-rose-400" />
+            <Kpi label={tr("Resultado", "Balance")} value={money(s.balance)} sub={tr(`${s.transactions} lançamentos`, `${s.transactions} transactions`)} tone={s.balance < 0 ? "text-rose-600" : undefined} />
+            <Kpi label={tr("Taxa de economia", "Savings rate")} value={percent(s.savings_rate)} sub={tr("Quanto da receita sobrou", "How much of the income was left")} />
           </Carousel>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-2">
-            <Card title="Receitas x despesas por mês"><EvolutionChart data={data.evolution} height={260} /></Card>
-            <Card title="Resultado mensal (receitas − despesas)"><BalanceChart data={data.evolution} height={284} /></Card>
+            <Card title={tr("Receitas x despesas por mês", "Income vs expenses per month")}><EvolutionChart data={data.evolution} height={260} /></Card>
+            <Card title={tr("Resultado mensal (receitas − despesas)", "Monthly balance (income − expenses)")}><BalanceChart data={data.evolution} height={284} /></Card>
           </div>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-2">
-            <Card title="Despesas por categoria">{data.expenses_by_category.length ? <CategoryBars data={data.expenses_by_category} limit={10} /> : <EmptyState title="Sem despesas no período" />}</Card>
-            <Card title="Receitas por categoria">{data.income_by_category.length ? <CategoryBars data={data.income_by_category} limit={10} /> : <EmptyState title="Sem receitas no período" />}</Card>
+            <Card title={tr("Despesas por categoria", "Expenses by category")}>{data.expenses_by_category.length ? <CategoryBars data={data.expenses_by_category} limit={10} /> : <EmptyState title={tr("Sem despesas no período", "No expenses in this period")} />}</Card>
+            <Card title={tr("Receitas por categoria", "Income by category")}>{data.income_by_category.length ? <CategoryBars data={data.income_by_category} limit={10} /> : <EmptyState title={tr("Sem receitas no período", "No income in this period")} />}</Card>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            <GroupTable title="Despesas por conta" rows={data.by_account} />
-            <GroupTable title="Por forma de pagamento" rows={data.by_payment_method.map((r) => ({ ...r, label: PAYMENT_METHODS[r.label] ?? r.label }))} />
-            <GroupTable title="Despesas por tag" rows={data.by_tag} />
+            <GroupTable title={tr("Despesas por conta", "Expenses by account")} rows={data.by_account} />
+            <GroupTable title={tr("Por forma de pagamento", "By payment method")} rows={data.by_payment_method.map((r) => ({ ...r, label: PAYMENT_METHODS[r.label] ?? r.label }))} />
+            <GroupTable title={tr("Despesas por tag", "Expenses by tag")} rows={data.by_tag} />
           </div>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-2">
-            <Card title="Maiores despesas do período" padded={false}>
+            <Card title={tr("Maiores despesas do período", "Largest expenses in the period")} padded={false}>
               <ul className="divide-y divide-slate-100 dark:divide-slate-800">
                 {data.top_expenses.map((t, i) => (
                   <li key={t.id} className="flex items-center gap-3 px-5 py-2.5 text-sm">
                     <span className="w-5 text-xs text-slate-400">{i + 1}</span>
                     <Dot color={t.category?.color} />
-                    <span className="min-w-0 flex-1"><span className="block truncate text-slate-800 dark:text-slate-100">{t.description}</span><span className="block truncate text-xs text-slate-500">{fmtDate(t.date)} · {t.category?.name ?? "Sem categoria"}</span></span>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-slate-800 dark:text-slate-100">{t.description}</span><span className="block truncate text-xs text-slate-500">{fmtDate(t.date)} · {t.category?.name ?? tr("Sem categoria", "No category")}</span></span>
                     <span className="tabular shrink-0 font-medium text-slate-900 dark:text-white">{money(t.amount)}</span>
                   </li>
                 ))}
               </ul>
             </Card>
-            <Card title="Tabela mensal" padded={false}>
+            <Card title={tr("Tabela mensal", "Monthly table")} padded={false}>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 text-xs text-slate-500 uppercase dark:bg-slate-800/50">
-                    <tr><th className="px-5 py-2.5 text-left">Mês</th><th className="px-3 py-2.5 text-right">Receitas</th><th className="px-3 py-2.5 text-right">Despesas</th><th className="px-5 py-2.5 text-right">Resultado</th></tr>
+                    <tr><th className="px-5 py-2.5 text-left">{tr("Mês", "Month")}</th><th className="px-3 py-2.5 text-right">{tr("Receitas", "Income")}</th><th className="px-3 py-2.5 text-right">{tr("Despesas", "Expenses")}</th><th className="px-5 py-2.5 text-right">{tr("Resultado", "Balance")}</th></tr>
                   </thead>
                   <tbody className="tabular divide-y divide-slate-100 dark:divide-slate-800">
                     {data.evolution.map((m) => (
@@ -160,7 +161,7 @@ function GroupTable({ title, rows }: { title: string; rows: Group[] }) {
             </li>
           ))}
         </ul>
-      ) : <p className="py-6 text-center text-sm text-slate-400">Sem dados no período</p>}
+      ) : <p className="py-6 text-center text-sm text-slate-400">{tr("Sem dados no período", "No data in this period")}</p>}
     </Card>
   );
 }

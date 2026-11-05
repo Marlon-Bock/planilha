@@ -4,6 +4,7 @@ import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import { Check, Pipette } from "lucide-react";
 import { cn, COLORS } from "@/lib/format";
 import { PopoverPanel, usePopover } from "@/components/controls";
+import { tr } from "@/lib/i18n";
 
 /* ------------------------------ Conversões ------------------------------ */
 
@@ -85,13 +86,13 @@ export function ColorPicker({ value, onChange }: { value: string; onChange: (c: 
   return (
     <div className="flex flex-wrap gap-2">
       {COLORS.map((c) => (
-        <button key={c} type="button" onClick={() => onChange(c)} aria-label={`Cor ${c}`}
+        <button key={c} type="button" onClick={() => onChange(c)} aria-label={tr(`Cor ${c}`, `Color ${c}`)}
           className={cn("flex h-7 w-7 items-center justify-center rounded-full ring-offset-2 transition hover:scale-110 dark:ring-offset-slate-900", value.toLowerCase() === c && "ring-2 ring-slate-400")}
           style={{ backgroundColor: c }}>
           {value.toLowerCase() === c && <Check className="h-4 w-4 text-white" />}
         </button>
       ))}
-      <button ref={anchorRef} type="button" onClick={() => (open ? close() : openCustom())} title="Escolher qualquer cor" aria-label="Cor personalizada"
+      <button ref={anchorRef} type="button" onClick={() => (open ? close() : openCustom())} title={tr("Escolher qualquer cor", "Pick any color")} aria-label={tr("Cor personalizada", "Custom color")}
         className={cn("relative flex h-7 w-7 items-center justify-center rounded-full ring-offset-2 transition hover:scale-110 dark:ring-offset-slate-900", (!isPreset || open) && "ring-2 ring-slate-400")}
         style={{ background: isPreset ? "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" : value }}>
         {isPreset ? <Pipette className="h-3.5 w-3.5 text-white drop-shadow" /> : <Check className="h-4 w-4 text-white" />}
@@ -114,11 +115,11 @@ export function ColorPicker({ value, onChange }: { value: string; onChange: (c: 
             </div>
             <div className="flex items-center gap-2">
               <span className="h-9 w-9 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700" style={{ backgroundColor: isHex(hexText) ? hexText : value }} />
-              <input value={hexText} onChange={(e) => onHex(e.target.value)} maxLength={7} spellCheck={false} placeholder="#000000" aria-label="Código hexadecimal"
+              <input value={hexText} onChange={(e) => onHex(e.target.value)} maxLength={7} spellCheck={false} placeholder="#000000" aria-label={tr("Código hexadecimal", "Hex code")}
                 className={cn("tabular h-9 w-full rounded-lg border bg-white px-3 font-mono text-sm uppercase text-slate-900 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:bg-slate-900 dark:text-slate-100",
                   isHex(hexText) ? "border-slate-300 focus:border-brand-500 dark:border-slate-700" : "border-rose-500")} />
             </div>
-            <button type="button" onClick={() => close()} className="h-9 w-full rounded-lg bg-brand-600 text-sm font-medium text-white hover:bg-brand-700">Usar esta cor</button>
+            <button type="button" onClick={() => close()} className="h-9 w-full rounded-lg bg-brand-600 text-sm font-medium text-white hover:bg-brand-700">{tr("Usar esta cor", "Use this color")}</button>
           </div>
         </PopoverPanel>
       )}

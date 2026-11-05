@@ -130,10 +130,10 @@ class InvestmentController extends Controller
             'note' => ['nullable', 'string', 'max:160'],
             // Conta de onde sai (aplicação) ou para onde volta (resgate). Opcional.
             'account_id' => ['nullable', 'prohibited_if:type,balance', Rule::exists('accounts', 'id')->where('user_id', $request->user()->id)],
-        ], ['date.before_or_equal' => 'A data não pode ser no futuro.']);
+        ], ['date.before_or_equal' => __('A data não pode ser no futuro.')]);
 
         if ($data['type'] !== 'balance' && $data['amount'] <= 0) {
-            return response()->json(['message' => 'Informe um valor maior que zero.', 'errors' => ['amount' => ['Informe um valor maior que zero.']]], 422);
+            return response()->json(['message' => __('Informe um valor maior que zero.'), 'errors' => ['amount' => [__('Informe um valor maior que zero.')]]], 422);
         }
 
         DB::transaction(function () use ($investment, $data) {
@@ -201,7 +201,7 @@ class InvestmentController extends Controller
             'is_active' => ['boolean'],
             'goal_id' => ['nullable', Rule::exists('goals', 'id')->where('user_id', $request->user()->id)],
             'notes' => ['nullable', 'string', 'max:2000'],
-        ], ['rate.required' => 'Informe a taxa (ex.: 100 para 100% do CDI).']);
+        ], ['rate.required' => __('Informe a taxa (ex.: 100 para 100% do CDI).')]);
 
         if (in_array($data['rate_type'], ['poupanca', 'variable'], true)) {
             $data['rate'] = null;

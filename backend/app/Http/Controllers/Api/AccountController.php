@@ -56,7 +56,7 @@ class AccountController extends Controller
     {
         if (Transaction::where('account_id', $account->id)->orWhere('transfer_account_id', $account->id)->exists()) {
             return response()->json([
-                'message' => 'Esta conta possui lançamentos. Arquive-a em vez de excluir, ou exclua os lançamentos antes.',
+                'message' => __('Esta conta possui lançamentos. Arquive-a em vez de excluir, ou exclua os lançamentos antes.'),
             ], 422);
         }
         $account->delete();

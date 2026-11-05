@@ -76,7 +76,7 @@ class GoalController extends Controller
     {
         if ($goal->investments()->exists()) {
             return response()->json([
-                'message' => 'Esta meta está ligada a investimentos: aplique ou resgate na caixinha e a meta acompanha sozinha.',
+                'message' => __('Esta meta está ligada a investimentos: aplique ou resgate na caixinha e a meta acompanha sozinha.'),
             ], 422);
         }
 

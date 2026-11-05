@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/format";
 import { ICON_GROUPS, ICONS } from "@/components/icons";
+import { tr } from "@/lib/i18n";
 
 const normalize = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
@@ -28,11 +29,11 @@ export function IconPicker({ value, color, onChange }: { value: string; color: s
       <div className="flex items-center gap-2 border-b border-slate-100 p-2 dark:border-slate-800">
         <div className="relative flex-1">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar ícone: mercado, uber, pet, luz, remédio..."
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr("Buscar ícone: mercado, uber, pet, luz, remédio...", "Search icon (in Portuguese): mercado, uber, pet, luz...")}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (results[0]) onChange(results[0].key); } }}
             className="h-9 w-full rounded-lg bg-slate-50 pr-8 pl-9 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500/20 focus:outline-none dark:bg-slate-800 dark:text-slate-100" />
           {query && (
-            <button type="button" onClick={() => setQuery("")} aria-label="Limpar busca" className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:text-slate-600">
+            <button type="button" onClick={() => setQuery("")} aria-label={tr("Limpar busca", "Clear search")} className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:text-slate-600">
               <X className="h-3.5 w-3.5" />
             </button>
           )}
@@ -51,7 +52,7 @@ export function IconPicker({ value, color, onChange }: { value: string; color: s
             <button key={g ?? "all"} type="button" onClick={() => setGroup(g)}
               className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition",
                 group === g ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800")}>
-              {g ?? "Todos"}
+              {g ?? tr("Todos", "All")}
             </button>
           ))}
         </div>
@@ -69,10 +70,10 @@ export function IconPicker({ value, color, onChange }: { value: string; color: s
             </button>
           );
         })}
-        {!results.length && <p className="col-span-full py-6 text-center text-sm text-slate-400">Nenhum ícone para “{query}”</p>}
+        {!results.length && <p className="col-span-full py-6 text-center text-sm text-slate-400">{tr("Nenhum ícone para", "No icon for")} “{query}”</p>}
       </div>
       <p className="border-t border-slate-100 px-3 py-1.5 text-[11px] text-slate-400 dark:border-slate-800">
-        {results.length} ícone(s){query && " · Enter escolhe o primeiro"}
+        {tr(`${results.length} ícone(s)`, `${results.length} icon(s)`)}{query && tr(" · Enter escolhe o primeiro", " · Enter picks the first one")}
       </p>
     </div>
   );

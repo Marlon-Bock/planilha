@@ -7,7 +7,7 @@
 
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { addDays, format, isSameDay, parseISO } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { dateLocale, tr } from "@/lib/i18n";
 import { Check, CircleDashed, Copy, Layers, Pencil, Repeat, Trash2 } from "lucide-react";
 import { cn, fmtDate, isInvestmentTx, money, PAYMENT_METHODS, TX_TYPES } from "@/lib/format";
 import type { Transaction } from "@/lib/types";
@@ -18,10 +18,10 @@ import { Modal } from "@/components/ui";
 function dayLabel(date: string) {
   const d = parseISO(date);
   const today = new Date();
-  if (isSameDay(d, today)) return "Hoje";
-  if (isSameDay(d, addDays(today, -1))) return "Ontem";
-  if (isSameDay(d, addDays(today, 1))) return "Amanhã";
-  const s = format(d, d.getFullYear() === today.getFullYear() ? "EEEE, d 'de' MMM" : "EEEE, d 'de' MMM 'de' yyyy", { locale: ptBR });
+  if (isSameDay(d, today)) return tr("Hoje", "Today");
+  if (isSameDay(d, addDays(today, -1))) return tr("Ontem", "Yesterday");
+  if (isSameDay(d, addDays(today, 1))) return tr("Amanhã", "Tomorrow");
+  const s = format(d, d.getFullYear() === today.getFullYear() ? tr("EEEE, d 'de' MMM", "EEEE, MMM d") : tr("EEEE, d 'de' MMM 'de' yyyy", "EEEE, MMM d, yyyy"), { locale: dateLocale() });
   return s.charAt(0).toUpperCase() + s.slice(1).replace(".", "");
 }
 
@@ -34,9 +34,9 @@ function amountView(t: Transaction) {
 }
 
 function subtitle(t: Transaction) {
-  if (isInvestmentTx(t.type)) return `${t.type === "invest" ? "Aplicação em" : "Resgate de"} ${t.investment?.name ?? "investimento"}`;
+  if (isInvestmentTx(t.type)) return `${t.type === "invest" ? tr("Aplicação em", "Deposit to") : tr("Resgate de", "Withdrawal from")} ${t.investment?.name ?? tr("investimento", "investment")}`;
   if (t.type === "transfer") return `${t.account?.name} → ${t.transfer_account?.name}`;
-  return [t.category?.name ?? "Sem categoria", t.account?.name].filter(Boolean).join(" · ");
+  return [t.category?.name ?? tr("Sem categoria", "No category"), t.account?.name].filter(Boolean).join(" · ");
 }
 
 export function MobileStatement({ rows, onOpen, onTogglePaid }: {
@@ -117,7 +117,7 @@ export function TxActionSheet({ tx, onClose, onEdit, onTogglePaid, onDuplicate, 
   const row = "flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-[15px] font-medium transition active:scale-[.99]";
 
   return (
-    <Modal open onClose={onClose} title={TX_TYPES[tx.type] ?? "Lançamento"} size="sm">
+    <Modal open onClose={onClose} title={TX_TYPES[tx.type] ?? tr("Lançamento", "Transaction")} size="sm">
       <div className="flex flex-col items-center text-center">
         <CategoryIcon icon={linked ? "trending-up" : tx.category?.icon} color={tx.investment?.color ?? tx.category?.color} />
         <p className="mt-2 font-semibold text-slate-900 dark:text-white">{tx.description}</p>
@@ -126,33 +126,33 @@ export function TxActionSheet({ tx, onClose, onEdit, onTogglePaid, onDuplicate, 
       </div>
 
       <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl bg-slate-50 p-4 text-sm dark:bg-slate-800/60">
-        <div><dt className="text-xs text-slate-500">Data</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{fmtDate(tx.date)}</dd></div>
-        <div><dt className="text-xs text-slate-500">Conta</dt><dd className="truncate font-medium text-slate-800 dark:text-slate-100">{tx.account?.name ?? "—"}</dd></div>
-        <div><dt className="text-xs text-slate-500">{linked ? "Investimento" : "Categoria"}</dt>
-          <dd className="truncate font-medium text-slate-800 dark:text-slate-100">{linked ? tx.investment?.name ?? "—" : tx.category?.name ?? (tx.type === "transfer" ? `→ ${tx.transfer_account?.name}` : "Sem categoria")}</dd></div>
-        <div><dt className="text-xs text-slate-500">Pagamento</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{tx.payment_method ? PAYMENT_METHODS[tx.payment_method] : "—"}</dd></div>
-        {tx.installment_total && <div><dt className="text-xs text-slate-500">Parcela</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{tx.installment_number} de {tx.installment_total}</dd></div>}
-        {tx.paid_at && <div><dt className="text-xs text-slate-500">Pago em</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{fmtDate(tx.paid_at)}</dd></div>}
-        {tx.notes && <div className="col-span-2"><dt className="text-xs text-slate-500">Observações</dt><dd className="text-slate-700 dark:text-slate-200">{tx.notes}</dd></div>}
+        <div><dt className="text-xs text-slate-500">{tr("Data", "Date")}</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{fmtDate(tx.date)}</dd></div>
+        <div><dt className="text-xs text-slate-500">{tr("Conta", "Account")}</dt><dd className="truncate font-medium text-slate-800 dark:text-slate-100">{tx.account?.name ?? "—"}</dd></div>
+        <div><dt className="text-xs text-slate-500">{linked ? tr("Investimento", "Investment") : tr("Categoria", "Category")}</dt>
+          <dd className="truncate font-medium text-slate-800 dark:text-slate-100">{linked ? tx.investment?.name ?? "—" : tx.category?.name ?? (tx.type === "transfer" ? `→ ${tx.transfer_account?.name}` : tr("Sem categoria", "No category"))}</dd></div>
+        <div><dt className="text-xs text-slate-500">{tr("Pagamento", "Payment")}</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{tx.payment_method ? PAYMENT_METHODS[tx.payment_method] : "—"}</dd></div>
+        {tx.installment_total && <div><dt className="text-xs text-slate-500">{tr("Parcela", "Installment")}</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{tx.installment_number} {tr("de", "of")} {tx.installment_total}</dd></div>}
+        {tx.paid_at && <div><dt className="text-xs text-slate-500">{tr("Pago em", "Paid on")}</dt><dd className="font-medium text-slate-800 dark:text-slate-100">{fmtDate(tx.paid_at)}</dd></div>}
+        {tx.notes && <div className="col-span-2"><dt className="text-xs text-slate-500">{tr("Observações", "Notes")}</dt><dd className="text-slate-700 dark:text-slate-200">{tx.notes}</dd></div>}
       </dl>
 
       <div className="mt-4 space-y-1">
         {!linked && (
           <button type="button" onClick={(e) => onTogglePaid(tx, e)} className={cn(row, "text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800")}>
             {tx.is_paid ? <CircleDashed className="h-5 w-5 text-slate-400" /> : <Check className="h-5 w-5 text-teal-600" />}
-            {tx.is_paid ? "Marcar como em aberto" : tx.type === "income" ? "Marcar como recebido" : "Marcar como pago"}
+            {tx.is_paid ? tr("Marcar como em aberto", "Mark as unpaid") : tx.type === "income" ? tr("Marcar como recebido", "Mark as received") : tr("Marcar como pago", "Mark as paid")}
           </button>
         )}
         <button type="button" onClick={() => onEdit(tx)} className={cn(row, "text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800")}>
-          <Pencil className="h-5 w-5 text-slate-400" /> {linked ? "Ver em Investimentos" : "Editar"}
+          <Pencil className="h-5 w-5 text-slate-400" /> {linked ? tr("Ver em Investimentos", "View in Investments") : tr("Editar", "Edit")}
         </button>
         {!linked && (
           <button type="button" onClick={() => onDuplicate(tx)} className={cn(row, "text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800")}>
-            <Copy className="h-5 w-5 text-slate-400" /> Duplicar no próximo mês
+            <Copy className="h-5 w-5 text-slate-400" /> {tr("Duplicar no próximo mês", "Duplicate to next month")}
           </button>
         )}
         <button type="button" onClick={() => onDelete(tx)} className={cn(row, "text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10")}>
-          <Trash2 className="h-5 w-5" /> Excluir
+          <Trash2 className="h-5 w-5" /> {tr("Excluir", "Delete")}
         </button>
       </div>
     </Modal>

@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
 import { cn } from "@/lib/format";
+import { getLang, tr } from "@/lib/i18n";
 
 /* ================================ Modo fofinho ================================ */
 
@@ -262,10 +263,14 @@ export function CritterArt({ critter, pose, className, flip }: { critter: Critte
     : <Dog color={critter.color} pose={pose} className={className} flip={flip} />;
 }
 
-const PHRASES = {
-  cat: ["Miau! 💕", "Purr purr~", "Me dá carinho?", "Te amo! 💗", "Cadê meu sachê?", "Miau miau 🐾", "Que cafuné bom~"],
-  dog: ["Au au! 💕", "Bora passear?", "Te amo! 💗", "Cadê o petisco?", "Mais carinho!", "Au! 🐾", "Melhor dia!"],
-} as const;
+const phrases = () => ({
+  cat: getLang() === "en"
+    ? ["Meow! 💕", "Purr purr~", "Pet me?", "Love you! 💗", "Where's my treat?", "Meow meow 🐾", "So cozy~"]
+    : ["Miau! 💕", "Purr purr~", "Me dá carinho?", "Te amo! 💗", "Cadê meu sachê?", "Miau miau 🐾", "Que cafuné bom~"],
+  dog: getLang() === "en"
+    ? ["Woof! 💕", "Walkies?", "Love you! 💗", "Treat please?", "More pets!", "Arf! 🐾", "Best day ever!"]
+    : ["Au au! 💕", "Bora passear?", "Te amo! 💗", "Cadê o petisco?", "Mais carinho!", "Au! 🐾", "Melhor dia!"],
+});
 
 /** Os olhinhos do bichinho acompanham o dedo/mouse (atualiza --lx/--ly no elemento). */
 function useLookAt(ref: RefObject<HTMLElement | null>) {
@@ -338,7 +343,7 @@ function usePetReactions(kind: Critter["kind"]) {
     setHappy(true);
     clearTimeout(timers.current.happy);
     timers.current.happy = setTimeout(() => setHappy(false), 1400);
-    say(party ? "Muito amor!! 💞" : pick(PHRASES[kind]));
+    say(party ? tr("Muito amor!! 💞", "So much love!! 💞") : pick(phrases()[kind]));
   };
 
   return { boing, happy, bubble, say, react, bump: () => setBoing((b) => b + 1) };
@@ -357,7 +362,7 @@ export function Pet({ critter, pose = "sit", className, label, flip, hearts = 10
 
   return (
     <button ref={ref} type="button" onClick={(e) => { react(e, hearts); onPet?.(); }}
-      aria-label={label ?? (critter.kind === "cat" ? "Gatinho" : "Cachorrinho")} title="Faz um carinho 💕"
+      aria-label={label ?? (critter.kind === "cat" ? tr("Gatinho", "Kitty") : tr("Cachorrinho", "Puppy"))} title={tr("Faz um carinho 💕", "Give a pet 💕")}
       className={cn("pet relative inline-block shrink-0 touch-manipulation outline-none select-none", happy && "pet-happy", className)}>
       <span key={boing} className={cn("block h-full w-full transition-transform hover:-translate-y-0.5", boing > 0 && "pet-boing")}>
         <CritterArt critter={critter} pose={pose} flip={flip} className="h-full w-full" />
@@ -476,7 +481,7 @@ export function PetBuddy() {
     if (shown) return;
     const t = setTimeout(() => {
       try { localStorage.setItem(`${BUDDY_KEY}:hint`, "1"); } catch { /* sem storage */ }
-      say("Me arrasta! Toque 2x pra trocar 🐾", 4200);
+      say(tr("Me arrasta! Toque 2x pra trocar 🐾", "Drag me! Double-tap to switch 🐾"), 4200);
     }, 1200);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -501,7 +506,7 @@ export function PetBuddy() {
     const double = now - lastTap.current < 320;
     lastTap.current = double ? 0 : now;
     if (sleeping) {
-      wake(); bump(); burstFrom(target, 6); say("Hã? Ah, oi! 💕");
+      wake(); bump(); burstFrom(target, 6); say(tr("Hã? Ah, oi! 💕", "Huh? Oh, hi! 💕"));
       return;
     }
     wake();
@@ -509,15 +514,15 @@ export function PetBuddy() {
       const idx = (dock.idx + 1) % BUDDIES.length;
       save({ ...dock, idx });
       bump(); burstFrom(target, 14);
-      say(BUDDIES[idx].kind === "cat" ? "Miau, cheguei! 🐾" : "Au au, cheguei! 🐾");
+      say(BUDDIES[idx].kind === "cat" ? tr("Miau, cheguei! 🐾", "Meow, I'm here! 🐾") : tr("Au au, cheguei! 🐾", "Woof, I'm here! 🐾"));
     } else {
       react(target, 10);
     }
   };
 
   return (
-    <div ref={ref} role="button" tabIndex={0} aria-label="Bichinho de companhia: toque para carinho, arraste para mover, toque duas vezes para trocar"
-      title="Toque: carinho · Arraste: mover · Toque 2x: trocar bichinho"
+    <div ref={ref} role="button" tabIndex={0} aria-label={tr("Bichinho de companhia: toque para carinho, arraste para mover, toque duas vezes para trocar", "Pet buddy: tap to pet, drag to move, double-tap to switch")}
+      title={tr("Toque: carinho · Arraste: mover · Toque 2x: trocar bichinho", "Tap: pet · Drag: move · Double-tap: switch buddy")}
       className={cn("pet fixed z-[35] cursor-grab touch-none outline-none select-none active:cursor-grabbing print:hidden", happy && "pet-happy")}
       style={{
         left, top, width: SIZE, height: SIZE,
@@ -531,7 +536,7 @@ export function PetBuddy() {
         const p = press.current;
         if (!p) return;
         if (!p.moved && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) return;
-        if (!p.moved) { p.moved = true; wake(); say("Uiii! 🎈", 1200); }
+        if (!p.moved) { p.moved = true; wake(); say(tr("Uiii! 🎈", "Wheee! 🎈"), 1200); }
         setDrag({ x: Math.min(Math.max(e.clientX - SIZE / 2, 0), vw - SIZE), y: Math.min(Math.max(e.clientY - SIZE * 0.25, 0), vh - SIZE) });
       }}
       onPointerUp={(e) => {
@@ -543,7 +548,7 @@ export function PetBuddy() {
         save({ ...dock, side, bottom: Math.round(vh - e.clientY - SIZE * 0.75) });
         setDrag(null);
         bump();
-        say(pick(["Aqui tá ótimo! 💕", "Cheguei! 🐾", "Que vista linda~"]));
+        say(pick(getLang() === "en" ? ["Perfect spot! 💕", "Here I am! 🐾", "Nice view~"] : ["Aqui tá ótimo! 💕", "Cheguei! 🐾", "Que vista linda~"]));
       }}
       onPointerCancel={() => { press.current = null; setDrag(null); }}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tap(e.currentTarget); } }}>

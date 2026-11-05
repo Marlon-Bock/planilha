@@ -16,7 +16,8 @@ import { createPortal } from "react-dom";
 import {
   addDays, addMonths, format, isSameDay, isSameMonth, isValid, parseISO, startOfMonth, startOfWeek,
 } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { dateLocale, intlLocale, tr } from "@/lib/i18n";
+import { localPattern } from "@/lib/format";
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Minus, Plus, Search } from "lucide-react";
 import { cn } from "@/lib/format";
 
@@ -151,7 +152,7 @@ export interface SelectProps {
   "aria-label"?: string;
 }
 
-export function Select({ value, onChange, children, className, invalid, disabled, required, searchable, placeholder = "Selecione", ...rest }: SelectProps) {
+export function Select({ value, onChange, children, className, invalid, disabled, required, searchable, placeholder = tr("Selecione", "Select"), ...rest }: SelectProps) {
   const options = useMemo(() => parseOptions(children), [children]);
   const current = String(value ?? "");
   const selected = options.find((o) => o.value === current);
@@ -252,7 +253,7 @@ export function Select({ value, onChange, children, className, invalid, disabled
           {showSearch && (
             <div className="relative border-b border-slate-100 p-2 dark:border-slate-800">
               <Search className="absolute top-1/2 left-4.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input ref={searchRef} value={query} onKeyDown={onListKey} placeholder="Buscar..."
+              <input ref={searchRef} value={query} onKeyDown={onListKey} placeholder={tr("Buscar...", "Search...")}
                 onChange={(e) => { setQuery(e.target.value); setActive(0); }}
                 className="h-9 w-full rounded-lg bg-slate-50 pr-3 pl-9 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none dark:bg-slate-800 dark:text-slate-100" />
             </div>
@@ -279,7 +280,7 @@ export function Select({ value, onChange, children, className, invalid, disabled
                 </Fragment>
               );
             })}
-            {!filtered.length && <li className="px-3 py-6 text-center text-sm text-slate-400">Nenhum resultado</li>}
+            {!filtered.length && <li className="px-3 py-6 text-center text-sm text-slate-400">{tr("Nenhum resultado", "No results")}</li>}
           </ul>
         </PopoverPanel>
       )}
@@ -289,19 +290,19 @@ export function Select({ value, onChange, children, className, invalid, disabled
 
 /* ============================ Grade de meses ============================ */
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => format(new Date(2024, i, 1), "MMM", { locale: ptBR }).replace(".", ""));
+const months = () => Array.from({ length: 12 }, (_, i) => format(new Date(2024, i, 1), "MMM", { locale: dateLocale() }).replace(".", ""));
 
 function MonthGrid({ year, selected, onYear, onPick }: { year: number; selected?: { y: number; m: number }; onYear: (y: number) => void; onPick: (m: number) => void }) {
   const now = new Date();
   return (
     <div className="w-72 p-3">
       <div className="mb-3 flex items-center justify-between">
-        <NavBtn label="Ano anterior" onClick={() => onYear(year - 1)}><ChevronLeft className="h-4 w-4" /></NavBtn>
+        <NavBtn label={tr("Ano anterior", "Previous year")} onClick={() => onYear(year - 1)}><ChevronLeft className="h-4 w-4" /></NavBtn>
         <span className="text-sm font-semibold text-slate-900 dark:text-white">{year}</span>
-        <NavBtn label="Próximo ano" onClick={() => onYear(year + 1)}><ChevronRight className="h-4 w-4" /></NavBtn>
+        <NavBtn label={tr("Próximo ano", "Next year")} onClick={() => onYear(year + 1)}><ChevronRight className="h-4 w-4" /></NavBtn>
       </div>
       <div className="grid grid-cols-3 gap-1.5">
-        {MONTHS.map((label, m) => {
+        {months().map((label, m) => {
           const isSel = selected?.y === year && selected.m === m;
           const isNow = now.getFullYear() === year && now.getMonth() === m;
           return (
@@ -331,7 +332,7 @@ function NavBtn({ children, onClick, label }: { children: ReactNode; onClick: ()
 
 /* =============================== DatePicker =============================== */
 
-const WEEKDAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
+const weekdays = () => tr("DSTQQSS", "SMTWTFS").split("");
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 const parse = (v?: string | null) => {
   if (!v) return null;
@@ -350,7 +351,7 @@ export interface DatePickerProps {
   "aria-label"?: string;
 }
 
-export function DatePicker({ value, onChange, placeholder = "Selecione a data", clearable, invalid, disabled, className, ...rest }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder = tr("Selecione a data", "Select a date"), clearable, invalid, disabled, className, ...rest }: DatePickerProps) {
   const selected = parse(value);
   const { open, setOpen, close, anchorRef, panelRef, place } = usePopover<HTMLButtonElement>();
   const [view, setView] = useState(() => startOfMonth(selected ?? new Date()));
@@ -407,9 +408,9 @@ export function DatePicker({ value, onChange, placeholder = "Selecione a data", 
         className={cn(triggerBase, open && openRing, invalid && "border-rose-500", className)}>
         <CalendarDays className="h-4 w-4 shrink-0 text-slate-400" />
         <span className={cn("tabular min-w-0 flex-1 truncate", !selected && "text-slate-500 dark:text-slate-400")}>
-          {selected ? format(selected, "dd/MM/yyyy") : placeholder}
+          {selected ? format(selected, localPattern("dd/MM/yyyy")) : placeholder}
         </span>
-        {selected && <span className="hidden text-xs text-slate-400 capitalize sm:inline">{format(selected, "EEE", { locale: ptBR }).replace(".", "")}</span>}
+        {selected && <span className="hidden text-xs text-slate-400 capitalize sm:inline">{format(selected, "EEE", { locale: dateLocale() }).replace(".", "")}</span>}
       </button>
       {open && (
         <PopoverPanel panelRef={panelRef}>
@@ -420,14 +421,14 @@ export function DatePicker({ value, onChange, placeholder = "Selecione a data", 
           ) : (
             <div className="w-72 p-3">
               <div className="mb-2 flex items-center justify-between">
-                <NavBtn label="Mês anterior" onClick={() => setView(addMonths(view, -1))}><ChevronLeft className="h-4 w-4" /></NavBtn>
+                <NavBtn label={tr("Mês anterior", "Previous month")} onClick={() => setView(addMonths(view, -1))}><ChevronLeft className="h-4 w-4" /></NavBtn>
                 <button type="button" onClick={() => setMode("months")} className="rounded-lg px-2 py-1 text-sm font-semibold text-slate-900 capitalize hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800">
-                  {format(view, "MMMM yyyy", { locale: ptBR })}
+                  {format(view, "MMMM yyyy", { locale: dateLocale() })}
                 </button>
-                <NavBtn label="Próximo mês" onClick={() => setView(addMonths(view, 1))}><ChevronRight className="h-4 w-4" /></NavBtn>
+                <NavBtn label={tr("Próximo mês", "Next month")} onClick={() => setView(addMonths(view, 1))}><ChevronRight className="h-4 w-4" /></NavBtn>
               </div>
               <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-slate-400">
-                {WEEKDAYS.map((w, i) => <span key={i} className="py-1">{w}</span>)}
+                {weekdays().map((w, i) => <span key={i} className="py-1">{w}</span>)}
               </div>
               <div ref={gridRef} tabIndex={0} role="grid" onKeyDown={onGridKey} className="grid grid-cols-7 gap-0.5 rounded-lg focus:outline-none">
                 {days.map((d) => {
@@ -437,7 +438,7 @@ export function DatePicker({ value, onChange, placeholder = "Selecione a data", 
                   const isFocus = isSameDay(d, focusDay);
                   return (
                     <button key={d.toISOString()} type="button" tabIndex={-1} onClick={() => pick(d)} onMouseDown={(e) => e.preventDefault()}
-                      aria-label={format(d, "d 'de' MMMM 'de' yyyy", { locale: ptBR })} aria-pressed={!!isSel}
+                      aria-label={format(d, tr("d 'de' MMMM 'de' yyyy", "MMMM d, yyyy"), { locale: dateLocale() })} aria-pressed={!!isSel}
                       className={cn(
                         "tabular relative flex h-9 items-center justify-center rounded-lg text-sm transition",
                         isSel ? "bg-brand-600 font-semibold text-white" : inMonth ? "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800" : "text-slate-300 hover:bg-slate-50 dark:text-slate-600 dark:hover:bg-slate-800/50",
@@ -450,9 +451,9 @@ export function DatePicker({ value, onChange, placeholder = "Selecione a data", 
                 })}
               </div>
               <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-800">
-                <button type="button" onClick={() => pick(new Date())} className="rounded-lg px-2 py-1 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10">Hoje</button>
+                <button type="button" onClick={() => pick(new Date())} className="rounded-lg px-2 py-1 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10">{tr("Hoje", "Today")}</button>
                 {clearable && selected && (
-                  <button type="button" onClick={() => { onChange(""); close(); }} className="rounded-lg px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">Limpar</button>
+                  <button type="button" onClick={() => { onChange(""); close(); }} className="rounded-lg px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">{tr("Limpar", "Clear")}</button>
                 )}
               </div>
             </div>
@@ -470,12 +471,12 @@ export function MonthPicker({ value, onChange }: { value: string; onChange: (mon
   const { open, setOpen, close, anchorRef, panelRef } = usePopover<HTMLButtonElement>();
   const [year, setYear] = useState(y);
   const shift = (n: number) => onChange(format(addMonths(new Date(y, m - 1, 1), n), "yyyy-MM"));
-  const raw = format(new Date(y, m - 1, 1), "MMMM 'de' yyyy", { locale: ptBR });
+  const raw = format(new Date(y, m - 1, 1), tr("MMMM 'de' yyyy", "MMMM yyyy"), { locale: dateLocale() });
   const label = raw.charAt(0).toUpperCase() + raw.slice(1); // "Novembro de 2026"
 
   return (
     <div className="inline-flex h-10 items-stretch rounded-lg border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
-      <button type="button" onClick={() => shift(-1)} aria-label="Mês anterior" className="flex items-center rounded-l-lg px-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white">
+      <button type="button" onClick={() => shift(-1)} aria-label={tr("Mês anterior", "Previous month")} className="flex items-center rounded-l-lg px-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white">
         <ChevronLeft className="h-4 w-4" />
       </button>
       <button ref={anchorRef} type="button" onClick={() => { if (open) close(); else { setYear(y); setOpen(true); } }}
@@ -484,7 +485,7 @@ export function MonthPicker({ value, onChange }: { value: string; onChange: (mon
         <CalendarDays className="h-4 w-4 text-slate-400" />
         {label}
       </button>
-      <button type="button" onClick={() => shift(1)} aria-label="Próximo mês" className="flex items-center rounded-r-lg px-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white">
+      <button type="button" onClick={() => shift(1)} aria-label={tr("Próximo mês", "Next month")} className="flex items-center rounded-r-lg px-2 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white">
         <ChevronRight className="h-4 w-4" />
       </button>
       {open && (
@@ -493,7 +494,7 @@ export function MonthPicker({ value, onChange }: { value: string; onChange: (mon
             <MonthGrid year={year} selected={{ y, m: m - 1 }} onYear={setYear}
               onPick={(mm) => { onChange(`${year}-${String(mm + 1).padStart(2, "0")}`); close(); }} />
             <div className="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
-              <button type="button" onClick={() => { onChange(format(new Date(), "yyyy-MM")); close(); }} className="rounded-lg px-2 py-1 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10">Mês atual</button>
+              <button type="button" onClick={() => { onChange(format(new Date(), "yyyy-MM")); close(); }} className="rounded-lg px-2 py-1 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10">{tr("Mês atual", "This month")}</button>
             </div>
           </div>
         </PopoverPanel>
@@ -555,7 +556,7 @@ export function MoneyInput({ value, onChange, allowNegative, invalid, className,
     const n = s.includes(",") ? Number(s.replace(/\./g, "").replace(",", ".")) : Number(s);
     return Number.isFinite(n) ? n : null;
   })();
-  const fmt = new Intl.NumberFormat("pt-BR", { style: "currency", currency });
+  const fmt = new Intl.NumberFormat(intlLocale(), { style: "currency", currency });
   const display = num === null ? "" : fmt.format(num);
 
   const toEnd = () => requestAnimationFrame(() => {
@@ -603,14 +604,14 @@ export function NumberStepper({ value, onChange, min = 0, max = 9999, suffix, cl
   const btn = "flex w-10 items-center justify-center text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-30 dark:hover:bg-slate-800 dark:hover:text-white";
   return (
     <div className={cn("flex h-10 items-stretch overflow-hidden rounded-lg border border-slate-300 bg-white focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20 dark:border-slate-700 dark:bg-slate-900", className)}>
-      <button type="button" onClick={() => set(n - 1)} disabled={n <= min} className={btn} aria-label="Diminuir"><Minus className="h-4 w-4" /></button>
+      <button type="button" onClick={() => set(n - 1)} disabled={n <= min} className={btn} aria-label={tr("Diminuir", "Decrease")}><Minus className="h-4 w-4" /></button>
       <div className="flex flex-1 items-center justify-center gap-1 border-x border-slate-200 dark:border-slate-700">
         <input inputMode="numeric" value={value} onChange={(e) => { const d = e.target.value.replace(/\D/g, ""); if (d === "") onChange(min); else set(Number(d)); }}
           onKeyDown={(e) => { if (e.key === "ArrowUp") { e.preventDefault(); set(n + 1); } if (e.key === "ArrowDown") { e.preventDefault(); set(n - 1); } }}
           className="tabular w-12 bg-transparent text-center text-sm font-medium text-slate-900 focus:outline-none dark:text-slate-100" />
         {suffix && <span className="text-sm text-slate-500">{suffix}</span>}
       </div>
-      <button type="button" onClick={() => set(n + 1)} disabled={n >= max} className={btn} aria-label="Aumentar"><Plus className="h-4 w-4" /></button>
+      <button type="button" onClick={() => set(n + 1)} disabled={n >= max} className={btn} aria-label={tr("Aumentar", "Increase")}><Plus className="h-4 w-4" /></button>
     </div>
   );
 }

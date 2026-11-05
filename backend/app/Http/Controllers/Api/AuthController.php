@@ -28,13 +28,13 @@ class AuthController extends Controller
         ]);
 
         if (! Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
-            throw ValidationException::withMessages(['email' => 'E-mail ou senha inválidos.']);
+            throw ValidationException::withMessages(['email' => __('E-mail ou senha inválidos.')]);
         }
 
         $user = Auth::guard('web')->user();
         if (! $user->is_active) {
             Auth::guard('web')->logout();
-            throw ValidationException::withMessages(['email' => 'Sua conta está desativada. Fale com o administrador.']);
+            throw ValidationException::withMessages(['email' => __('Sua conta está desativada. Fale com o administrador.')]);
         }
 
         if ($request->hasSession()) {
@@ -53,7 +53,7 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         }
 
-        return response()->json(['message' => 'Sessão encerrada.']);
+        return response()->json(['message' => __('Sessão encerrada.')]);
     }
 
     public function me(Request $request): JsonResponse
@@ -85,7 +85,7 @@ class AuthController extends Controller
         ]);
         $request->user()->update(['password' => Hash::make($request->input('password'))]);
 
-        return response()->json(['message' => 'Senha alterada.']);
+        return response()->json(['message' => __('Senha alterada.')]);
     }
 
     public function destroyAccount(Request $request): JsonResponse
@@ -99,7 +99,7 @@ class AuthController extends Controller
             $request->session()->regenerateToken();
         }
 
-        return response()->json(['message' => 'Conta excluída.']);
+        return response()->json(['message' => __('Conta excluída.')]);
     }
 
     /** Cria a estrutura inicial (categorias padrão + carteira) de um usuário novo. */

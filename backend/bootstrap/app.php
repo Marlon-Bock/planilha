@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Autenticação SPA via cookie de sessão (Sanctum) para o frontend Next.js.
         $middleware->statefulApi();
+        // Idioma escolhido no app (português ou inglês).
+        $middleware->prependToGroup('api', SetLocale::class);
         // A tela de login vive no frontend; requisições /api/* recebem 401 em JSON.
         $middleware->redirectGuestsTo(fn () => rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/').'/login');
         $middleware->alias([

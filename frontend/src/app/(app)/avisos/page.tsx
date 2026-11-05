@@ -11,6 +11,7 @@ import { cn, fmtDate } from "@/lib/format";
 import type { AppNotification } from "@/lib/types";
 import { Button, Card, EmptyState, PageHeader, Pagination, Select, Skeleton } from "@/components/ui";
 import { PushPrompt } from "@/components/push";
+import { tr } from "@/lib/i18n";
 
 const levelIcon = { danger: CircleX, warning: TriangleAlert, success: CircleCheck, info: Info };
 const levelStyle = {
@@ -38,37 +39,37 @@ export default function NotificationsPage() {
     setChecking(true);
     try {
       const { data } = await api.post<{ created: number }>("/notifications/check");
-      toast[data.created ? "success" : "info"](data.created ? `${data.created} novo(s) aviso(s)` : "Nenhum aviso novo — tudo sob controle");
+      toast[data.created ? "success" : "info"](data.created ? tr(`${data.created} novo(s) aviso(s)`, `${data.created} new alert(s)`) : tr("Nenhum aviso novo — tudo sob controle", "No new alerts — all under control"));
       refresh();
     } finally { setChecking(false); }
   };
 
   return (
     <>
-      <PageHeader title="Avisos" description="Contas a vencer, vencidas, orçamentos estourados, metas atingidas e saldo negativo"
+      <PageHeader title={tr("Avisos", "Alerts")} description={tr("Contas a vencer, vencidas, orçamentos estourados, metas atingidas e saldo negativo", "Bills due, overdue bills, budgets exceeded, goals reached and negative balance")}
         actions={<>
-          <Button variant="outline" onClick={check} loading={checking}><RefreshCw className="h-4 w-4" /> Verificar agora</Button>
-          {!!data?.unread && <Button variant="secondary" onClick={async () => { await api.post("/notifications/read-all"); refresh(); }}>Marcar todos como lidos</Button>}
+          <Button variant="outline" onClick={check} loading={checking}><RefreshCw className="h-4 w-4" /> {tr("Verificar agora", "Check now")}</Button>
+          {!!data?.unread && <Button variant="secondary" onClick={async () => { await api.post("/notifications/read-all"); refresh(); }}>{tr("Marcar todos como lidos", "Mark all as read")}</Button>}
         </>} />
 
       <PushPrompt />
 
       <div className="mb-4 flex flex-wrap gap-2">
         <Select value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }} className="w-auto">
-          <option value="">Todos</option>
-          <option value="unread">Não lidos ({data?.unread ?? 0})</option>
+          <option value="">{tr("Todos", "All")}</option>
+          <option value="unread">{tr("Não lidos", "Unread")} ({data?.unread ?? 0})</option>
         </Select>
         <Select value={level} onChange={(e) => { setLevel(e.target.value); setPage(1); }} className="w-auto">
-          <option value="">Todos os tipos</option>
-          <option value="danger">Críticos</option>
-          <option value="warning">Atenção</option>
-          <option value="success">Conquistas</option>
+          <option value="">{tr("Todos os tipos", "All types")}</option>
+          <option value="danger">{tr("Críticos", "Critical")}</option>
+          <option value="warning">{tr("Atenção", "Warning")}</option>
+          <option value="success">{tr("Conquistas", "Achievements")}</option>
         </Select>
       </div>
 
       <Card padded={false}>
         {isLoading ? <div className="p-4"><Skeleton className="h-60" /></div> : !data?.data.length ? (
-          <EmptyState icon={<Bell className="h-6 w-6" />} title="Nenhum aviso" description="Verificamos suas contas todos os dias às 7h. Você pode ajustar a antecedência dos avisos no seu perfil." />
+          <EmptyState icon={<Bell className="h-6 w-6" />} title={tr("Nenhum aviso", "No alerts")} description={tr("Verificamos suas contas todos os dias às 7h. Você pode ajustar a antecedência dos avisos no seu perfil.", "We check your bills every day at 7am. You can adjust how early you get alerts in your profile.")} />
         ) : (
           <ul className="divide-y divide-slate-100 dark:divide-slate-800">
             {data.data.map((n) => {
@@ -78,16 +79,16 @@ export default function NotificationsPage() {
                   <span className={cn("rounded-lg p-2", levelStyle[n.level])}><Icon className="h-5 w-5" /></span>
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-100">
-                      {n.title}{!n.read_at && <span className="h-2 w-2 rounded-full bg-brand-600" aria-label="não lido" />}
+                      {n.title}{!n.read_at && <span className="h-2 w-2 rounded-full bg-brand-600" aria-label={tr("não lido", "unread")} />}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">{n.message}</p>
                     <div className="mt-1 flex gap-3 text-xs text-slate-400">
-                      <span>{fmtDate(n.created_at, "dd/MM/yyyy 'às' HH:mm")}</span>
-                      {n.link && <Link href={n.link.split("?")[0]} onClick={() => { resolveLink(n.link!); if (!n.read_at) api.post(`/notifications/${n.id}/read`).then(refresh); }} className="text-brand-600 hover:underline">Ver detalhes</Link>}
-                      {!n.read_at && <button onClick={async () => { await api.post(`/notifications/${n.id}/read`); refresh(); }} className="hover:text-slate-600">Marcar como lido</button>}
+                      <span>{fmtDate(n.created_at, tr("dd/MM/yyyy 'às' HH:mm", "MM/dd/yyyy 'at' h:mm a"))}</span>
+                      {n.link && <Link href={n.link.split("?")[0]} onClick={() => { resolveLink(n.link!); if (!n.read_at) api.post(`/notifications/${n.id}/read`).then(refresh); }} className="text-brand-600 hover:underline">{tr("Ver detalhes", "See details")}</Link>}
+                      {!n.read_at && <button onClick={async () => { await api.post(`/notifications/${n.id}/read`); refresh(); }} className="hover:text-slate-600">{tr("Marcar como lido", "Mark as read")}</button>}
                     </div>
                   </div>
-                  <button onClick={async () => { await api.delete(`/notifications/${n.id}`); refresh(); }} className="rounded-md p-1.5 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-rose-600" aria-label="Excluir aviso">
+                  <button onClick={async () => { await api.delete(`/notifications/${n.id}`); refresh(); }} className="rounded-md p-1.5 text-slate-300 opacity-0 group-hover:opacity-100 hover:text-rose-600" aria-label={tr("Excluir aviso", "Delete alert")}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </li>
