@@ -28,11 +28,29 @@
   --animate-float-slow: float-slow 9s ease-in-out infinite;
 }
 
+/* "only light": impede o celular (modo escuro automático do Chrome/Samsung/Xiaomi) de
+   escurecer o site por conta própria. O nosso modo escuro só liga pelo botão do app. */
 html {
-  color-scheme: light;
+  color-scheme: only light;
 }
 html.dark {
   color-scheme: dark;
+}
+
+/* Modo escuro de verdade (preto/cinza neutro), sem o tom azulado do "slate".
+   Os utilitários do Tailwind usam essas variáveis, então todo slate-* vira cinza neutro aqui. */
+html.dark {
+  --color-slate-50: oklch(98.5% 0 0);
+  --color-slate-100: oklch(96.5% 0 0);
+  --color-slate-200: oklch(91.5% 0 0);
+  --color-slate-300: oklch(86% 0 0);
+  --color-slate-400: oklch(70.5% 0 0);
+  --color-slate-500: oklch(55.5% 0 0);
+  --color-slate-600: oklch(43.5% 0 0);
+  --color-slate-700: oklch(35% 0 0);
+  --color-slate-800: oklch(26% 0 0);
+  --color-slate-900: oklch(19.5% 0 0);
+  --color-slate-950: oklch(13.5% 0 0);
 }
 
 body {

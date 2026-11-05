@@ -64,7 +64,7 @@ export function CoupleGreeting() {
       {photo && (
         <div className="absolute inset-0 overflow-hidden rounded-2xl bg-slate-200 dark:bg-slate-800">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={user.cover_url!} alt="" className="cover-zoom h-full w-full object-cover"
+          <img src={user.cover_url!} alt="" onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="cover-zoom h-full w-full object-cover"
             style={{ objectPosition: `50% ${user.cover_position ?? COVER_DEFAULT_POSITION}%` }} />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 via-35% to-transparent to-65%" />
           <div className="absolute inset-0 bg-gradient-to-r from-brand-900/30 to-transparent" />

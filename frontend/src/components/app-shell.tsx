@@ -95,7 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link href="/dashboard" className="group flex items-center gap-2.5 px-5 py-5">
         <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm shadow-brand-500/30">
           <Wallet className="h-5 w-5" />
-          <Heart className="absolute -top-1.5 -right-1.5 h-4 w-4 text-brand-500 drop-shadow-[0_0_2px_white] animate-heartbeat dark:drop-shadow-[0_0_2px_#0f172a]" />
+          <Heart className="absolute -top-1.5 -right-1.5 h-4 w-4 text-brand-500 drop-shadow-[0_0_2px_white] animate-heartbeat dark:drop-shadow-[0_0_2px_#171717]" />
         </span>
         <span className="min-w-0 leading-tight">
           <span className="block text-lg font-bold tracking-tight text-slate-900 dark:text-white">Planilha</span>
@@ -141,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link href="/dashboard" className="flex min-w-0 items-center gap-2 lg:hidden">
               <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-white shadow-sm shadow-brand-500/30">
                 <Wallet className="h-4 w-4" />
-                <Heart className="absolute -top-1 -right-1 h-3.5 w-3.5 text-brand-500 drop-shadow-[0_0_2px_white] dark:drop-shadow-[0_0_2px_#0f172a]" />
+                <Heart className="absolute -top-1 -right-1 h-3.5 w-3.5 text-brand-500 drop-shadow-[0_0_2px_white] dark:drop-shadow-[0_0_2px_#171717]" />
               </span>
               <span className="truncate text-base font-bold tracking-tight text-slate-900 dark:text-white">
                 {user.partner_name ? `${firstName(user.name)} & ${firstName(user.partner_name)}` : "Planilha"}

@@ -27,7 +27,7 @@ function getQueryClient() {
 export function Providers({ children }: { children: ReactNode }) {
   // Tema claro por padrão (o escuro fica só para quem escolher no botão da lua).
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} enableColorScheme={false} disableTransitionOnChange>
       <QueryClientProvider client={getQueryClient()}>
         <PwaProvider>
           <AuthProvider>{children}</AuthProvider>

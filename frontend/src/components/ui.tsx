@@ -161,7 +161,7 @@ export function Progress({ value, color, className, heart }: { value: number; co
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${v}%`, backgroundColor: color ?? auto }} />
       </div>
       {heart && v > 0 && (
-        <Heart className="pointer-events-none absolute top-1/2 hidden h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_1.5px_white] animate-heartbeat cute:block dark:drop-shadow-[0_0_1.5px_#0f172a]"
+        <Heart className="pointer-events-none absolute top-1/2 hidden h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_1.5px_white] animate-heartbeat cute:block dark:drop-shadow-[0_0_1.5px_#171717]"
           style={{ left: `${Math.min(v, 98)}%`, color: color ?? auto }} />
       )}
     </div>
