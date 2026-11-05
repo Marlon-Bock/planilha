@@ -7,6 +7,8 @@ import { ptBR } from "date-fns/locale";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/components/auth";
 import { Heart, heartRain, Pet } from "@/components/cute";
+import { Avatar } from "@/components/photos";
+import { cn } from "@/lib/format";
 
 const firstName = (n: string) => n.trim().split(/\s+/)[0];
 
@@ -60,7 +62,19 @@ export function CoupleGreeting() {
         <Pet critter={{ kind: "cat", color: "ginger" }} pose="peek" className="h-10 w-[60px] sm:h-12 sm:w-[74px]" hearts={14} bubbleAlign="right" />
       </div>
 
-      <div className="flex flex-col gap-1 pr-0 sm:pr-48">
+      {/* Capa (foto escolhida no Perfil) */}
+      {user.cover_url && (
+        <div className="-mx-5 -mt-4 mb-3 h-32 overflow-hidden rounded-t-[15px] sm:h-48">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={user.cover_url} alt="" className="h-full w-full object-cover" />
+        </div>
+      )}
+
+      <div className={cn("flex items-center gap-3", !user.cover_url && "sm:pr-48")}>
+        {user.avatar_url && (
+          <Avatar user={user} className={cn("h-12 w-12 ring-4 ring-white sm:h-16 sm:w-16 dark:ring-slate-900", user.cover_url && "-mt-10 self-start sm:-mt-12")} />
+        )}
+      <div className="flex min-w-0 flex-col gap-1">
         <p className="text-lg font-semibold text-slate-900 dark:text-white">
           {greeting(now)}, {name}! <span aria-hidden>💕</span>
         </p>
@@ -88,6 +102,7 @@ export function CoupleGreeting() {
             <Link href="/perfil" className="font-medium text-brand-600 hover:underline dark:text-brand-400">Conte quem é seu amor e desde quando estão juntos →</Link>
           </p>
         )}
+      </div>
       </div>
     </section>
   );

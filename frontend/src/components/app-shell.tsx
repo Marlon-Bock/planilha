@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui";
 import { PopoverPanel, usePopover } from "@/components/controls";
 import { InstallButton } from "@/components/pwa";
 import { Heart, Pet, PetBuddy } from "@/components/cute";
+import { AppBackground, Avatar } from "@/components/photos";
 import { BottomNav, MoreSheet } from "@/components/mobile-nav";
 
 const firstName = (n: string) => n.trim().split(/\s+/)[0];
@@ -171,6 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         ]} />
       <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} transaction={editing} defaults={defaults} />
       <PetBuddy />
+      <AppBackground />
     </TxFormContext.Provider>
   );
 }
@@ -178,14 +180,13 @@ export function AppShell({ children }: { children: ReactNode }) {
 /** Cartão do usuário no rodapé da sidebar; abre um menu com perfil, admin e sair. */
 function UserMenu({ user, onLogout }: { user: User; onLogout: () => void }) {
   const { open, setOpen, close, anchorRef, panelRef } = usePopover<HTMLButtonElement>({ matchWidth: true });
-  const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
   const item = "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition";
 
   return (
     <>
       <button ref={anchorRef} type="button" onClick={() => setOpen(!open)} aria-haspopup="menu" aria-expanded={open}
         className={cn("flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-slate-100 dark:hover:bg-slate-800", open && "bg-slate-100 dark:bg-slate-800")}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">{initials}</span>
+        <Avatar user={user} className="h-9 w-9 text-sm" />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
             <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{user.name}</span>

@@ -6,6 +6,9 @@ export interface User {
   name: string;
   partner_name: string | null;
   together_since: string | null;
+  avatar_url: string | null;
+  cover_url: string | null;
+  background_url: string | null;
   email: string;
   role: "admin" | "user";
   is_active: boolean;

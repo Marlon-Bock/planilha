@@ -38,6 +38,15 @@ return [
             'report' => false,
         ],
 
+        // Fotos enviadas pelo casal (perfil, capa, fundo). Fica dentro do projeto, fora do Git
+        // e fora da pasta pública: só é entregue para quem está logado (PhotoController).
+        'uploads' => [
+            'driver' => 'local',
+            'root' => storage_path('app/uploads'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth";
 import { Badge, Button, Card, ConfirmDialog, DatePicker, Field, Input, PageHeader, Select } from "@/components/ui";
 import { BUDDIES, Heart, Pet } from "@/components/cute";
 import { PushSettingsCard } from "@/components/push";
+import { PhotosCard } from "@/components/photos";
 
 export default function ProfilePage() {
   const { user, setUser, logout } = useAuth();
@@ -114,6 +115,8 @@ export default function ProfilePage() {
             <Button type="submit" variant="secondary">Alterar senha</Button>
           </form>
         </Card>
+
+        <PhotosCard className="lg:col-span-2" />
 
         <PushSettingsCard />
 

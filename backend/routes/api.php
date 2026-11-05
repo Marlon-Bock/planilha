@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\RecurringTransactionController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\PhotoController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::put('profile', [AuthController::class, 'updateProfile']);
     Route::put('profile/password', [AuthController::class, 'updatePassword']);
     Route::delete('profile', [AuthController::class, 'destroyAccount']);
+    Route::get('profile/photos/{slot}', [PhotoController::class, 'show'])->whereIn('slot', PhotoController::SLOTS_LIST);
+    Route::post('profile/photos/{slot}', [PhotoController::class, 'store'])->whereIn('slot', PhotoController::SLOTS_LIST);
+    Route::delete('profile/photos/{slot}', [PhotoController::class, 'destroy'])->whereIn('slot', PhotoController::SLOTS_LIST);
 
     Route::get('dashboard', DashboardController::class);
     Route::get('reports', ReportController::class);

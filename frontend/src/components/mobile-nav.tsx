@@ -16,6 +16,7 @@ import { cn } from "@/lib/format";
 import type { AppNotification, User } from "@/lib/types";
 import { usePwa } from "@/components/pwa";
 import { Heart } from "@/components/cute";
+import { Avatar } from "@/components/photos";
 
 export interface NavItem { href: string; label: string; icon: LucideIcon }
 
@@ -94,7 +95,6 @@ export function MoreSheet({ open, onClose, items, user, onLogout }: {
   }, [open, onClose]);
 
   if (!open) return null;
-  const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
   const first = (n: string) => n.trim().split(/\s+/)[0];
 
   return (
@@ -104,7 +104,7 @@ export function MoreSheet({ open, onClose, items, user, onLogout }: {
         <div className="sticky top-0 z-10 bg-white/95 px-5 pt-3 pb-2 backdrop-blur dark:bg-slate-900/95">
           <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 font-semibold text-white">{initials}</span>
+            <Avatar user={user} className="h-11 w-11" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold text-slate-900 dark:text-white">{user.name}</p>
               <p className="flex items-center gap-1 truncate text-xs text-brand-600 dark:text-brand-400">

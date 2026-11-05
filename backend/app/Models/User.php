@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -21,7 +22,9 @@ class User extends Authenticatable
         'name', 'partner_name', 'together_since', 'email', 'password', 'role', 'is_active', 'currency', 'alert_days_before', 'last_login_at',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'remember_token', 'avatar_path', 'cover_path', 'background_path'];
+
+    protected $appends = ['avatar_url', 'cover_url', 'background_url'];
 
     protected $attributes = [
         'role' => self::ROLE_USER,
@@ -40,6 +43,33 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'alert_days_before' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Conta excluída leva junto as fotos.
+        static::deleted(fn (User $user) => Storage::disk('uploads')->deleteDirectory((string) $user->id));
+    }
+
+    /** URL da foto (rota autenticada); o ?v= muda a cada troca para furar o cache. */
+    private function photoUrl(string $slot, ?string $path): ?string
+    {
+        return $path ? '/api/profile/photos/'.$slot.'?v='.substr(md5($path), 0, 10) : null;
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->photoUrl('avatar', $this->avatar_path);
+    }
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        return $this->photoUrl('cover', $this->cover_path);
+    }
+
+    public function getBackgroundUrlAttribute(): ?string
+    {
+        return $this->photoUrl('background', $this->background_path);
     }
 
     public function isAdmin(): bool
