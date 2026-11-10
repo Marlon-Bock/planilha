@@ -5,7 +5,7 @@
  * O modo fofinho fica sempre ligado; só quem ativou "reduzir movimento" no sistema vê tudo parado.
  */
 
-import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type RefObject } from "react";
 import { cn } from "@/lib/format";
 import { getLang, tr } from "@/lib/i18n";
 
@@ -20,10 +20,10 @@ export function CuteSync() {
   return null;
 }
 
-const motionAllowed = () =>
+export const motionAllowed = () =>
   typeof window !== "undefined" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-const pick = <T,>(list: readonly T[]) => list[Math.floor(Math.random() * list.length)];
+export const pick = <T,>(list: readonly T[]) => list[Math.floor(Math.random() * list.length)];
 
 /* ============================== Explosão de corações ============================== */
 
@@ -196,7 +196,7 @@ export const DOG_COLORS = {
 export type DogColor = keyof typeof DOG_COLORS;
 
 /** Cachorrinho em SVG, com as mesmas poses do gatinho. Orelhinhas caídas, linguinha e coleira com plaquinha. */
-export function Dog({ color = "caramel", pose = "sit", className, flip }: { color?: DogColor; pose?: Pose; className?: string; flip?: boolean }) {
+export function Dog({ color = "caramel", pose = "sit", className, flip, collar = "#ec4899" }: { color?: DogColor; pose?: Pose; className?: string; flip?: boolean; collar?: string | null }) {
   const c = DOG_COLORS[color];
   const sleeping = pose === "sleep";
   const viewBox = pose === "peek" ? "0 0 120 78" : "0 0 120 110";
@@ -212,8 +212,12 @@ export function Dog({ color = "caramel", pose = "sit", className, flip }: { colo
           <ellipse cx="47" cy="106" rx="8.5" ry="5" fill={c.body} stroke={c.dark} strokeWidth="1.5" />
           <ellipse cx="73" cy="106" rx="8.5" ry="5" fill={c.body} stroke={c.dark} strokeWidth="1.5" />
           {/* Coleira com plaquinha */}
-          <path d="M40 69 Q60 79 80 69" fill="none" stroke="#ec4899" strokeWidth="4.5" strokeLinecap="round" />
-          <circle cx="60" cy="79" r="3.6" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+          {collar && (
+            <>
+              <path d="M40 69 Q60 79 80 69" fill="none" stroke={collar} strokeWidth="4.5" strokeLinecap="round" />
+              <circle cx="60" cy="79" r="3.6" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+            </>
+          )}
         </>
       )}
       {sleeping && (
@@ -254,13 +258,13 @@ export function Dog({ color = "caramel", pose = "sit", className, flip }: { colo
 
 /* ============================ Bichinhos interativos ============================ */
 
-export type Critter = { kind: "cat"; color: CatColor } | { kind: "dog"; color: DogColor };
+export type Critter = { kind: "cat"; color: CatColor } | { kind: "dog"; color: DogColor; collar?: string | null };
 
 /** Desenha um gatinho ou cachorrinho conforme o tipo. */
 export function CritterArt({ critter, pose, className, flip }: { critter: Critter; pose?: Pose; className?: string; flip?: boolean }) {
   return critter.kind === "cat"
     ? <Cat color={critter.color} pose={pose} className={className} flip={flip} />
-    : <Dog color={critter.color} pose={pose} className={className} flip={flip} />;
+    : <Dog color={critter.color} pose={pose} className={className} flip={flip} collar={critter.collar} />;
 }
 
 const phrases = () => ({
@@ -273,7 +277,7 @@ const phrases = () => ({
 });
 
 /** Os olhinhos do bichinho acompanham o dedo/mouse (atualiza --lx/--ly no elemento). */
-function useLookAt(ref: RefObject<HTMLElement | null>) {
+export function useLookAt(ref: RefObject<HTMLElement | null>) {
   useEffect(() => {
     if (!motionAllowed()) return;
     let raf = 0;
@@ -306,7 +310,7 @@ function useLookAt(ref: RefObject<HTMLElement | null>) {
 }
 
 /** Balãozinho de fala. */
-function Bubble({ text, ms = 1800, align = "center" }: { text: string; ms?: number; align?: "center" | "left" | "right" }) {
+export function Bubble({ text, ms = 1800, align = "center" }: { text: string; ms?: number; align?: "center" | "left" | "right" }) {
   return (
     <span className={cn("pointer-events-none absolute bottom-full z-10 mb-1 flex",
       align === "center" && "left-1/2 -translate-x-1/2", align === "left" && "left-0", align === "right" && "right-0")}>
@@ -318,7 +322,7 @@ function Bubble({ text, ms = 1800, align = "center" }: { text: string; ms?: numb
 }
 
 /** Reações compartilhadas: pulinho, olhinhos felizes, corações e frase. */
-function usePetReactions(kind: Critter["kind"]) {
+export function usePetReactions(kind: Critter["kind"]) {
   const [boing, setBoing] = useState(0);
   const [happy, setHappy] = useState(false);
   const [bubble, setBubble] = useState<{ text: string; ms: number } | null>(null);
@@ -416,151 +420,4 @@ export function SleepyCat({ className, seed = "" }: { className?: string; seed?:
 /** Spinner de coração. */
 export function HeartSpinner({ className }: { className?: string }) {
   return <Heart className={cn("h-6 w-6 text-brand-500 animate-[heartbeat_1.2s_ease-in-out_infinite]", className)} />;
-}
-
-/* ========================= Bichinho de companhia (arrastável) ========================= */
-
-export const BUDDIES: Critter[] = [
-  { kind: "cat", color: "ginger" },
-  { kind: "dog", color: "caramel" },
-  { kind: "cat", color: "gray" },
-  { kind: "dog", color: "white" },
-  { kind: "dog", color: "choco" },
-  { kind: "cat", color: "cream" },
-];
-
-const BUDDY_KEY = "planilha:buddy";
-const SIZE = 64;
-const SLEEP_AFTER = 40_000;
-
-type Dock = { side: "left" | "right"; bottom: number; idx: number };
-
-const readDock = (): Dock | null => {
-  try {
-    const d = JSON.parse(localStorage.getItem(BUDDY_KEY) ?? "null");
-    return d && (d.side === "left" || d.side === "right") && typeof d.bottom === "number" ? { side: d.side, bottom: d.bottom, idx: Number(d.idx) || 0 } : null;
-  } catch {
-    return null;
-  }
-};
-
-const subscribeViewport = (cb: () => void) => {
-  window.addEventListener("resize", cb);
-  return () => window.removeEventListener("resize", cb);
-};
-const viewportSnapshot = () => `${window.innerWidth}x${window.innerHeight}`;
-
-/**
- * Bichinho que mora na tela: arraste para qualquer lugar (ele gruda na borda),
- * toque = carinho, toque duplo = troca de bichinho. Parado um tempo, dorme.
- */
-export function PetBuddy() {
-  const [vw, vh] = useSyncExternalStore(subscribeViewport, viewportSnapshot, () => "390x844").split("x").map(Number);
-  const desktop = vw >= 1024;
-  const [dock, setDock] = useState<Dock>(() => readDock() ?? { side: "right", bottom: desktop ? 20 : 96, idx: 0 });
-  const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
-  const [sleeping, setSleeping] = useState(false);
-  const [activity, setActivity] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  const press = useRef<{ x: number; y: number; moved: boolean } | null>(null);
-  const lastTap = useRef(0);
-  const critter = BUDDIES[dock.idx % BUDDIES.length];
-  const { boing, happy, bubble, say, react, bump } = usePetReactions(critter.kind);
-  useLookAt(ref);
-
-  // Dorme depois de um tempo sem interação.
-  useEffect(() => {
-    const t = setTimeout(() => setSleeping(true), SLEEP_AFTER);
-    return () => clearTimeout(t);
-  }, [activity]);
-
-  // Primeira vez: ensina o que dá para fazer.
-  useEffect(() => {
-    let shown = true;
-    try { shown = !!localStorage.getItem(`${BUDDY_KEY}:hint`); } catch { /* sem storage */ }
-    if (shown) return;
-    const t = setTimeout(() => {
-      try { localStorage.setItem(`${BUDDY_KEY}:hint`, "1"); } catch { /* sem storage */ }
-      say(tr("Me arrasta! Toque 2x pra trocar 🐾", "Drag me! Double-tap to switch 🐾"), 4200);
-    }, 1200);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const save = (d: Dock) => {
-    setDock(d);
-    try { localStorage.setItem(BUDDY_KEY, JSON.stringify(d)); } catch { /* sem storage */ }
-  };
-
-  const wake = () => { setActivity((a) => a + 1); setSleeping(false); };
-
-  const minBottom = desktop ? 8 : 84; // não fica em cima da barra inferior do celular
-  const maxBottom = Math.max(minBottom, vh - SIZE - 72);
-  const bottom = Math.min(Math.max(dock.bottom, minBottom), maxBottom);
-  const edgeLeft = desktop ? 256 + 8 : 6; // no PC, não cobre o menu lateral
-  const left = drag ? drag.x : dock.side === "left" ? edgeLeft : vw - SIZE - 6;
-  const top = drag ? drag.y : vh - bottom - SIZE;
-
-  const tap = (target: Element) => {
-    const now = Date.now();
-    const double = now - lastTap.current < 320;
-    lastTap.current = double ? 0 : now;
-    if (sleeping) {
-      wake(); bump(); burstFrom(target, 6); say(tr("Hã? Ah, oi! 💕", "Huh? Oh, hi! 💕"));
-      return;
-    }
-    wake();
-    if (double) {
-      const idx = (dock.idx + 1) % BUDDIES.length;
-      save({ ...dock, idx });
-      bump(); burstFrom(target, 14);
-      say(BUDDIES[idx].kind === "cat" ? tr("Miau, cheguei! 🐾", "Meow, I'm here! 🐾") : tr("Au au, cheguei! 🐾", "Woof, I'm here! 🐾"));
-    } else {
-      react(target, 10);
-    }
-  };
-
-  return (
-    <div ref={ref} role="button" tabIndex={0} aria-label={tr("Bichinho de companhia: toque para carinho, arraste para mover, toque duas vezes para trocar", "Pet buddy: tap to pet, drag to move, double-tap to switch")}
-      title={tr("Toque: carinho · Arraste: mover · Toque 2x: trocar bichinho", "Tap: pet · Drag: move · Double-tap: switch buddy")}
-      className={cn("pet fixed z-[35] cursor-grab touch-none outline-none select-none active:cursor-grabbing print:hidden", happy && "pet-happy")}
-      style={{
-        left, top, width: SIZE, height: SIZE,
-        transition: drag ? "none" : "left .5s cubic-bezier(.34,1.56,.64,1), top .5s cubic-bezier(.34,1.56,.64,1)",
-      }}
-      onPointerDown={(e) => {
-        e.currentTarget.setPointerCapture(e.pointerId);
-        press.current = { x: e.clientX, y: e.clientY, moved: false };
-      }}
-      onPointerMove={(e) => {
-        const p = press.current;
-        if (!p) return;
-        if (!p.moved && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) return;
-        if (!p.moved) { p.moved = true; wake(); say(tr("Uiii! 🎈", "Wheee! 🎈"), 1200); }
-        setDrag({ x: Math.min(Math.max(e.clientX - SIZE / 2, 0), vw - SIZE), y: Math.min(Math.max(e.clientY - SIZE * 0.25, 0), vh - SIZE) });
-      }}
-      onPointerUp={(e) => {
-        const p = press.current;
-        press.current = null;
-        if (!p) return;
-        if (!p.moved) return tap(e.currentTarget);
-        const side = e.clientX < (desktop ? (vw + 256) / 2 : vw / 2) ? "left" : "right";
-        save({ ...dock, side, bottom: Math.round(vh - e.clientY - SIZE * 0.75) });
-        setDrag(null);
-        bump();
-        say(pick(getLang() === "en" ? ["Perfect spot! 💕", "Here I am! 🐾", "Nice view~"] : ["Aqui tá ótimo! 💕", "Cheguei! 🐾", "Que vista linda~"]));
-      }}
-      onPointerCancel={() => { press.current = null; setDrag(null); }}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tap(e.currentTarget); } }}>
-      {/* Sombrinha no chão */}
-      {!drag && <span className="absolute -bottom-0.5 left-1/2 h-2 w-10 -translate-x-1/2 rounded-full bg-slate-900/10 blur-[2px] dark:bg-black/30" />}
-      <span key={boing} className={cn("block h-full w-full", drag ? "pet-dragging" : boing > 0 && "pet-boing")}>
-        <CritterArt critter={critter} pose={sleeping && !drag ? "sleep" : "sit"} flip={dock.side === "left"} className="h-full w-full drop-shadow-sm" />
-      </span>
-      {sleeping && !drag && (
-        <span className="pointer-events-none absolute -top-2 right-1 text-sm font-bold text-brand-400 animate-bob">z<span className="text-xs">z</span></span>
-      )}
-      {bubble && <Bubble text={bubble.text} ms={bubble.ms} align={dock.side === "left" ? "left" : "right"} />}
-    </div>
-  );
 }

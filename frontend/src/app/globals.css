@@ -236,6 +236,17 @@ body {
   animation: dangle 0.6s ease-in-out infinite;
 }
 
+/* Andando pela tela: pulinhos curtos, tipo trotando. */
+@keyframes pet-walk {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-6px) rotate(4deg); }
+}
+.pet-walk {
+  transform-origin: 50% 100%;
+  animation: pet-walk 0.34s ease-in-out infinite;
+}
+.pet-walk .dog-tail { animation-duration: 0.2s; }
+
 /* Balão de fala. */
 @keyframes bubble {
   0% { opacity: 0; transform: translateY(6px) scale(0.6); }

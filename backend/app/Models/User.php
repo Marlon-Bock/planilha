@@ -40,6 +40,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'together_since' => 'date:Y-m-d',
             'cover_position' => 'integer',
+            'pet' => 'array',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'alert_days_before' => 'integer',

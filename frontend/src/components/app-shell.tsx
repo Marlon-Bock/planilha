@@ -20,7 +20,8 @@ import { TransactionForm, type TxDefaults } from "@/components/transaction-form"
 import { Spinner } from "@/components/ui";
 import { PopoverPanel, usePopover } from "@/components/controls";
 import { InstallButton } from "@/components/pwa";
-import { Heart, Pet, PetBuddy } from "@/components/cute";
+import { Heart, Pet } from "@/components/cute";
+import { PetBuddy } from "@/components/my-pet";
 import { AppBackground, Avatar } from "@/components/photos";
 import { BottomNav, MoreSheet } from "@/components/mobile-nav";
 

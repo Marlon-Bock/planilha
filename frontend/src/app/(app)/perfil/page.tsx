@@ -6,7 +6,8 @@ import { api, parseError, type FieldErrors } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/components/auth";
 import { Badge, Button, Card, ConfirmDialog, DatePicker, Field, Input, PageHeader, Select } from "@/components/ui";
-import { BUDDIES, Heart, Pet } from "@/components/cute";
+import { Heart } from "@/components/cute";
+import { MyPetCard } from "@/components/my-pet";
 import { PushSettingsCard } from "@/components/push";
 import { PhotosCard } from "@/components/photos";
 import { tr } from "@/lib/i18n";
@@ -121,18 +122,7 @@ export default function ProfilePage() {
 
         <PushSettingsCard />
 
-        <Card title={tr("Nossos bichinhos 🐾", "Our buddies 🐾")}>
-          <div className="flex flex-wrap items-end justify-center gap-x-2 gap-y-4 pt-6">
-            {BUDDIES.map((b) => (
-              <Pet key={`${b.kind}-${b.color}`} critter={b} className="h-16 w-16 sm:h-20 sm:w-20" />
-            ))}
-          </div>
-          <ul className="mt-4 space-y-1 text-xs text-slate-500">
-            <li><strong className="text-slate-700 dark:text-slate-300">{tr("Toque", "Tap")}</strong>{tr(" num bichinho para fazer carinho. Cinco toques seguidos fazem chover corações.", " a buddy to pet it. Five taps in a row make it rain hearts.")}</li>
-            <li>{tr("O bichinho que fica no canto da tela dá para ", "You can ")}<strong className="text-slate-700 dark:text-slate-300">{tr("arrastar", "drag")}</strong>{tr(" para onde quiser. ", " the buddy in the corner of the screen anywhere you like. ")}<strong className="text-slate-700 dark:text-slate-300">{tr("Toque duas vezes", "Double-tap")}</strong>{tr(" nele para trocar de bichinho.", " it to switch buddies.")}</li>
-            <li>{tr("Se ninguém brincar com ele por um tempo, ele tira uma soneca 💤", "If nobody plays with it for a while, it takes a nap 💤")}</li>
-          </ul>
-        </Card>
+        <MyPetCard />
 
         <Card title={tr("Zona de perigo", "Danger zone")} className="border-rose-200 lg:col-span-2 dark:border-rose-500/30">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

@@ -1,6 +1,16 @@
 export type TxType = "income" | "expense" | "transfer" | "invest" | "redeem";
 export type TxStatus = "paid" | "pending" | "overdue";
 
+/** Cachorrinho do usuário (users.pet). `collar`: cor em hex, ou null = sem coleira. */
+export interface PetData {
+  name: string | null;
+  color: "caramel" | "white" | "choco";
+  collar: string | null;
+  wander: boolean;
+  fed_at: string | null;
+  love: number;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -10,6 +20,7 @@ export interface User {
   cover_url: string | null;
   cover_position: number | null;
   background_url: string | null;
+  pet: PetData | null;
   email: string;
   role: "admin" | "user";
   is_active: boolean;
