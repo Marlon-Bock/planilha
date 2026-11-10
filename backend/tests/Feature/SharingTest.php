@@ -84,6 +84,62 @@ class SharingTest extends TestCase
         $this->actingAs($natalia)->getJson('/api/goals')->assertJsonCount(1, 'data');
     }
 
+    public function test_couple_goal_sums_the_boxes_of_both_people(): void
+    {
+        // Taxas fixas: o teste não consulta o Banco Central.
+        $this->instance(\App\Services\MarketRates::class, new class extends \App\Services\MarketRates {
+            public function all(): array
+            {
+                return ['cdi' => 13.65, 'selic' => 13.75, 'ipca' => 4.5, 'date' => today()->toDateString(), 'source' => 'test'];
+            }
+        });
+        $marlon = $this->user('Marlon');
+        $natalia = $this->user('Natália');
+        $outro = $this->user('Outro');
+        $box = function (User $owner, string $name, float $amount) {
+            $inv = \App\Models\Investment::withoutGlobalScopes()->create(['user_id' => $owner->id, 'name' => $name, 'institution' => 'Nubank', 'type' => 'caixinha', 'rate_type' => 'cdi', 'rate' => 100, 'liquidity' => 'daily']);
+            $inv->movements()->create(['type' => 'deposit', 'amount' => $amount, 'date' => today()]);
+
+            return $inv;
+        };
+        $dele = $box($marlon, 'Caixinha do Marlon', 3000);
+        $dela = $box($natalia, 'Caixinha da Natália', 2000);
+        $alheia = $box($outro, 'Caixinha alheia', 999);
+
+        // Marlon cria "Morar juntos" com a caixinha dele e convida a Natália.
+        $id = $this->actingAs($marlon)->postJson('/api/goals', ['name' => 'Morar juntos', 'target_amount' => 40000, 'investment_ids' => [$dele->id], 'member_ids' => [$natalia->id]])
+            ->assertCreated()->assertJsonPath('data.current_amount', 3000)->json('data.id');
+
+        // Natália liga a caixinha dela: o guardado vira a soma. Não consegue ligar a de outra pessoa.
+        $this->actingAs($natalia)->putJson("/api/goals/{$id}/investments", ['investment_ids' => [$dele->id]])->assertStatus(422);
+        $res = $this->putJson("/api/goals/{$id}/investments", ['investment_ids' => [$dela->id]])->assertOk()
+            ->assertJsonPath('data.current_amount', 5000)
+            ->assertJsonCount(2, 'data.linked_investments');
+        $mine = collect($res->json('data.linked_investments'))->firstWhere('mine', true);
+        $this->assertSame('Caixinha da Natália', $mine['name']);
+        $this->assertSame(3000, Goal::withoutGlobalScopes()->find($id)->investments()->withoutGlobalScopes()->where('user_id', $marlon->id)->count() * 3000);
+
+        // Os dois veem o mesmo total, cada um com a sua marcada como "minha".
+        $forMarlon = $this->actingAs($marlon)->getJson('/api/goals')->assertJsonPath('data.0.current_amount', 5000)->json('data.0.linked_investments');
+        $this->assertSame('Natália', collect($forMarlon)->firstWhere('mine', false)['owner']);
+        // Com caixinha de qualquer um dos dois, não há depósito manual.
+        $this->postJson("/api/goals/{$id}/contribute", ['amount' => 10])->assertStatus(422);
+
+        // Quem não participa não liga caixinha na meta dos outros.
+        $this->actingAs($outro)->putJson("/api/goals/{$id}/investments", ['investment_ids' => [$alheia->id]])->assertNotFound();
+
+        // Marlon edita a meta sem mexer nas caixinhas dele: a da Natália continua.
+        $this->actingAs($marlon)->putJson("/api/goals/{$id}", ['name' => 'Morar juntos', 'target_amount' => 40000, 'investment_ids' => [$dele->id], 'member_ids' => [$natalia->id]])
+            ->assertOk()->assertJsonPath('data.current_amount', 5000);
+
+        // Natália tira a caixinha dela; depois sai da meta e a caixinha dela vai junto.
+        $this->actingAs($natalia)->putJson("/api/goals/{$id}/investments", ['investment_ids' => []])->assertOk()->assertJsonPath('data.current_amount', 3000);
+        $this->putJson("/api/goals/{$id}/investments", ['investment_ids' => [$dela->id]])->assertOk();
+        $this->actingAs($marlon)->putJson("/api/goals/{$id}", ['name' => 'Morar juntos', 'target_amount' => 40000, 'member_ids' => []])
+            ->assertOk()->assertJsonPath('data.current_amount', 3000);
+        $this->assertNull($dela->fresh()->goal_id);
+    }
+
     public function test_view_as_requires_permission_and_is_read_only(): void
     {
         $marlon = $this->user('Marlon');

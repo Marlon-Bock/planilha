@@ -66,6 +66,9 @@ class GoalController extends Controller
             }
             if ($memberIds !== null) {
                 $goal->members()->sync($memberIds);
+                // Quem saiu da meta leva as caixinhas junto.
+                Investment::withoutGlobalScopes()->where('goal_id', $goal->id)
+                    ->whereNotIn('user_id', [$goal->user_id, ...$memberIds])->update(['goal_id' => null]);
             }
         });
         $this->syncCompletion($goal);
@@ -91,12 +94,30 @@ class GoalController extends Controller
         return response()->json(['data' => $this->present($goal)]);
     }
 
+    /**
+     * Minhas caixinhas nesta meta. Em metas de casal cada participante liga as suas,
+     * e o "já guardado" é a soma de todas.
+     */
+    public function linkMine(Request $request, Goal $goal): JsonResponse
+    {
+        abort_if($goal->isTask(), 422, __('Esta meta não tem valor para depositar.'));
+        $data = $request->validate([
+            'investment_ids' => ['present', 'array'],
+            'investment_ids.*' => ['integer', Rule::exists('investments', 'id')->where('user_id', $request->user()->id)],
+        ]);
+        // As consultas de investimento só enxergam os meus: as caixinhas dos outros ficam como estão.
+        $this->linkInvestments($goal, array_map('intval', $data['investment_ids']));
+        $this->syncCompletion($goal);
+
+        return response()->json(['data' => $this->present($goal)]);
+    }
+
     /** Depósito (valor positivo) ou retirada (valor negativo) na meta. */
     public function contribute(Request $request, Goal $goal, AlertService $alerts): JsonResponse
     {
         $this->ownerOnly($goal);
         abort_if($goal->isTask(), 422, __('Esta meta não tem valor para depositar.'));
-        if ($goal->investments()->exists()) {
+        if ($goal->allInvestments()->exists()) {
             return response()->json([
                 'message' => __('Esta meta está ligada a investimentos: aplique ou resgate na caixinha e a meta acompanha sozinha.'),
             ], 422);
@@ -129,7 +150,7 @@ class GoalController extends Controller
         return $this->progress->hydrateOne($goal->fresh([...$with, ...self::PEOPLE]));
     }
 
-    /** Define exatamente quais investimentos guardam dinheiro para a meta. */
+    /** Define exatamente quais investimentos (de quem está logado) guardam dinheiro para a meta. */
     private function linkInvestments(Goal $goal, array $ids): void
     {
         Investment::where('goal_id', $goal->id)->whereNotIn('id', $ids)->update(['goal_id' => null]);
@@ -141,7 +162,7 @@ class GoalController extends Controller
     private function syncCompletion(Goal $goal): void
     {
         // Metas de fazer algo são marcadas na mão; as vinculadas, pelo GoalProgress (saldo das caixinhas).
-        if ($goal->isTask() || $goal->investments()->exists()) {
+        if ($goal->isTask() || $goal->allInvestments()->exists()) {
             return;
         }
         $done = $goal->current_amount >= $goal->target_amount;

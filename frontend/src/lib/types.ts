@@ -142,7 +142,8 @@ export interface Goal {
   monthly_needed: number | null;
   contributions?: { id: number; amount: number; date: string; note: string | null }[];
   // Caixinhas vinculadas: o "já guardado" é o saldo delas.
-  linked_investments?: { id: number; name: string; institution: string | null; color: string; balance: number; is_estimated: boolean }[];
+  // Em metas de casal cada participante liga as suas: `owner` é o nome do dono e `mine` diz se é minha.
+  linked_investments?: { id: number; name: string; institution: string | null; color: string; balance: number; is_estimated: boolean; owner: string | null; mine: boolean }[];
 }
 
 export interface Recurring {

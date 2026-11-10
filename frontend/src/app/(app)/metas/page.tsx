@@ -25,6 +25,8 @@ export default function GoalsPage() {
   // Metas ligadas a caixinhas: aplicar/resgatar abre o formulário de investimentos.
   const [investing, setInvesting] = useState<{ state: MovementState; options: Investment[] } | null>(null);
   const [toDelete, setToDelete] = useState<Goal | null>(null);
+  // Meta de casal: escolher quais das minhas caixinhas guardam para ela.
+  const [linking, setLinking] = useState<Goal | null>(null);
   const invalidate = useInvalidateFinance();
   const { data: investments = [] } = useQuery({
     queryKey: ["investments", { showInactive: false }],
@@ -33,7 +35,7 @@ export default function GoalsPage() {
   });
 
   const openInvest = (g: Goal, kind: "deposit" | "withdraw") => {
-    const ids = new Set(g.linked_investments?.map((i) => i.id));
+    const ids = new Set(g.linked_investments?.filter((i) => i.mine).map((i) => i.id));
     const options = investments.filter((i) => ids.has(i.id));
     if (!options.length) return toast.error(tr("Não encontramos as caixinhas desta meta. Recarregue a página.", "We couldn't find this goal's investments. Reload the page."));
     setInvesting({ state: { inv: options.length === 1 ? options[0] : null, kind }, options });
@@ -76,7 +78,11 @@ export default function GoalsPage() {
           action={<Button onClick={() => setFormOpen(true)}>{tr("Criar meta", "Create goal")}</Button>} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {data.data.map((g) => (
+          {data.data.map((g) => {
+            const shared = !g.is_owner || !!g.members?.length;
+            const hasMine = !!g.linked_investments?.some((i) => i.mine);
+            const anyLinked = !!g.linked_investments?.length;
+            return (
             <div key={g.id} className={cn("group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900", cuteHover)}>
               <div className="flex items-start gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: `${g.color}1f`, color: g.color }}>{g.kind === "task" ? <ListChecks className="h-5 w-5 cute:group-hover:animate-wiggle" /> : <Target className="h-5 w-5 cute:group-hover:animate-wiggle" />}</span>
@@ -119,7 +125,7 @@ export default function GoalsPage() {
                       <li key={i.id} className="flex items-center justify-between gap-2 text-xs">
                         <span className="flex min-w-0 items-center gap-1.5 text-slate-700 dark:text-slate-200">
                           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: i.color }} />
-                          <span className="truncate">{i.name}{i.institution && <span className="text-slate-400"> · {i.institution}</span>}</span>
+                          <span className="truncate">{i.name}{!shared && i.institution && <span className="text-slate-400"> · {i.institution}</span>}{shared && i.owner && <span className="text-violet-600 dark:text-violet-300"> · {i.mine ? tr("minha", "mine") : i.owner.trim().split(/\s+/)[0]}</span>}</span>
                         </span>
                         <span className="tabular font-medium text-slate-800 dark:text-slate-100">{money(i.balance)}{i.is_estimated && <span className="font-normal text-slate-400"> (est.)</span>}</span>
                       </li>
@@ -133,11 +139,12 @@ export default function GoalsPage() {
                   <Button size="sm" className="flex-1" variant={g.completed_at ? "outline" : "primary"} onClick={(e) => toggleDone(g, e)}>
                     {g.completed_at ? <><Undo2 className="h-4 w-4" /> {tr("Desfazer", "Undo")}</> : <><Check className="h-4 w-4" /> {tr("Marcar como feita", "Mark as done")}</>}
                   </Button>
-                ) : !g.is_owner ? (
-                  <p className="flex-1 text-xs text-slate-400">{tr(`Só ${g.user?.name ?? "quem criou"} movimenta esta meta`, `Only ${g.user?.name ?? "the owner"} can move money in this goal`)}</p>
-                ) : g.linked_investments?.length ? (
+                ) : !hasMine && (anyLinked || !g.is_owner) ? (
+                  // A meta soma caixinhas (ou é de outra pessoa) e eu ainda não liguei nenhuma minha.
+                  <Button size="sm" className="flex-1" variant="outline" onClick={() => setLinking(g)}><Link2 className="h-4 w-4" /> {tr("Adicionar minha caixinha", "Add my investment")}</Button>
+                ) : hasMine ? (
                   <>
-                    <Button size="sm" className="flex-1" onClick={() => openInvest(g, "deposit")}><Plus className="h-4 w-4" /> {tr("Aplicar na caixinha", "Deposit to investment")}</Button>
+                    <Button size="sm" className="flex-1" onClick={() => openInvest(g, "deposit")}><Plus className="h-4 w-4" /> {tr("Aplicar", "Deposit")}</Button>
                     <Button size="sm" variant="outline" onClick={() => openInvest(g, "withdraw")} title={tr("Resgatar da caixinha", "Withdraw from investment")}><Minus className="h-4 w-4" /></Button>
                   </>
                 ) : (
@@ -145,6 +152,9 @@ export default function GoalsPage() {
                     <Button size="sm" className="flex-1" onClick={() => setMoving({ goal: g, withdraw: false })}><Plus className="h-4 w-4" /> {tr("Depositar", "Deposit")}</Button>
                     <Button size="sm" variant="outline" onClick={() => setMoving({ goal: g, withdraw: true })} title={tr("Retirar", "Withdraw")}><Minus className="h-4 w-4" /></Button>
                   </>
+                )}
+                {!g.is_owner && hasMine && (
+                  <Button size="sm" variant="ghost" onClick={() => setLinking(g)} title={tr("Minhas caixinhas nesta meta", "My investments in this goal")}><Link2 className="h-4 w-4" /></Button>
                 )}
                 {g.is_owner && (
                   <>
@@ -167,12 +177,14 @@ export default function GoalsPage() {
                 </details>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       <GoalForm open={formOpen} onClose={() => setFormOpen(false)} goal={editing} investments={investments} />
       <ContributionForm state={moving} onClose={() => setMoving(null)} />
+      {linking && <LinkMineModal key={linking.id} goal={linking} investments={investments} onClose={() => setLinking(null)} />}
       <MovementForm state={investing?.state ?? null} investments={investing?.options ?? []} onClose={() => setInvesting(null)} />
       <ConfirmDialog open={!!toDelete} onClose={() => setToDelete(null)} onConfirm={remove} title={tr("Excluir meta", "Delete goal")} confirmLabel={tr("Excluir", "Delete")}
         message={<>{tr("Excluir a meta ", "Delete the goal ")}<strong>{toDelete?.name}</strong>{tr(" e seu histórico?", " and its history?")}</>} />
@@ -208,12 +220,14 @@ function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const invalidate = useInvalidateFinance();
-  const linked = !task && investmentIds.length > 0;
+  const linked = !task && (investmentIds.length > 0 || (goal?.linked_investments ?? []).some((i) => !i.mine));
   // Caixinhas livres ou já desta meta (uma caixinha guarda para uma meta só).
   const options = investments
     .filter((i) => !i.goal_id || i.goal_id === goal?.id)
     .map((i) => ({ id: i.id, name: `${i.name}${i.institution ? ` · ${i.institution}` : ""} (${money(i.balance)})`, color: i.color }));
-  const linkedTotal = investments.filter((i) => investmentIds.includes(i.id)).reduce((t, i) => t + i.balance, 0);
+  // Caixinhas que os participantes ligaram (não aparecem na minha lista, mas entram na soma).
+  const othersTotal = task ? 0 : (goal?.linked_investments ?? []).filter((i) => !i.mine).reduce((t, i) => t + i.balance, 0);
+  const linkedTotal = investments.filter((i) => investmentIds.includes(i.id)).reduce((t, i) => t + i.balance, 0) + othersTotal;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -263,7 +277,7 @@ function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
         <>
         <Field label={tr("Valor objetivo", "Target amount")} error={errors.target_amount}><MoneyInput value={form.target_amount} onChange={(v) => setForm({ ...form, target_amount: v })} /></Field>
         {linked ? (
-          <Field label={tr("Já guardado", "Already saved")} hint={tr("Vem do saldo das caixinhas vinculadas", "Comes from the linked investments' balance")}>
+          <Field label={tr("Já guardado", "Already saved")} hint={othersTotal > 0 ? tr(`Soma das caixinhas vinculadas (${money(othersTotal)} de quem participa)`, `Sum of linked investments (${money(othersTotal)} from participants)`) : tr("Vem do saldo das caixinhas vinculadas", "Comes from the linked investments' balance")}>
             <div className="tabular flex h-10 items-center rounded-lg border border-dashed border-violet-300 bg-violet-50/60 px-3 text-sm font-medium text-violet-800 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-200">
               {money(linkedTotal)}
             </div>
@@ -279,7 +293,7 @@ function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
         )}
         {people.length > 0 && (
           <Field label={tr("Meta de casal: quem participa", "Couple goal: who takes part")} group className="sm:col-span-2" error={errors["member_ids.0"]}
-            hint={task ? tr("Quem participa vê a meta e também pode marcar como feita.", "Participants see the goal and can also mark it as done.") : tr("Quem participa vê a meta e o progresso; só você deposita e edita.", "Participants see the goal and its progress; only you deposit and edit.")}>
+            hint={task ? tr("Quem participa vê a meta e também pode marcar como feita.", "Participants see the goal and can also mark it as done.") : tr("Quem participa vê a meta e pode ligar as próprias caixinhas: o guardado é a soma das de todos.", "Participants see the goal and can link their own investments: the saved amount is everyone's sum.")}>
             <MultiSelect label={memberIds.length ? tr("Participantes", "Participants") : tr("Só eu (toque para convidar)", "Just me (tap to invite)")} options={people} value={memberIds} onChange={setMemberIds} />
           </Field>
         )}
@@ -287,6 +301,50 @@ function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
         <Field label={tr("Cor", "Color")} group className="sm:col-span-2"><ColorPicker value={form.color} onChange={(color) => setForm({ ...form, color })} /></Field>
         <Field label={tr("Observações", "Notes")} className="sm:col-span-2"><Textarea placeholder={tr("Opcional: motivação, onde o dinheiro está guardado...", "Optional: motivation, where the money is kept...")} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} /></Field>
       </form>
+    </Modal>
+  );
+}
+
+/** Meta de casal: quais das minhas caixinhas guardam dinheiro para ela. */
+function LinkMineModal({ goal, investments, onClose }: { goal: Goal; investments: Investment[]; onClose: () => void }) {
+  const [ids, setIds] = useState<number[]>(() => goal.linked_investments?.filter((i) => i.mine).map((i) => i.id) ?? []);
+  const [saving, setSaving] = useState(false);
+  const invalidate = useInvalidateFinance();
+  // Caixinhas livres ou já desta meta (uma caixinha guarda para uma meta só).
+  const options = investments
+    .filter((i) => !i.goal_id || i.goal_id === goal.id)
+    .map((i) => ({ id: i.id, name: `${i.name}${i.institution ? ` · ${i.institution}` : ""} (${money(i.balance)})`, color: i.color }));
+  const others = (goal.linked_investments ?? []).filter((i) => !i.mine).reduce((t, i) => t + i.balance, 0);
+  const mine = investments.filter((i) => ids.includes(i.id)).reduce((t, i) => t + i.balance, 0);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.put(`/goals/${goal.id}/investments`, { investment_ids: ids });
+      toast.success(ids.length ? tr("Sua caixinha agora soma nesta meta 💕", "Your investment now counts toward this goal 💕") : tr("Suas caixinhas saíram desta meta", "Your investments were removed from this goal"));
+      invalidate();
+      onClose();
+    } catch (err) { toast.error(parseError(err).message); } finally { setSaving(false); }
+  };
+
+  return (
+    <Modal open onClose={onClose} title={tr(`Minhas caixinhas em "${goal.name}"`, `My investments in "${goal.name}"`)} size="sm"
+      footer={<><Button variant="ghost" onClick={onClose}>{tr("Cancelar", "Cancel")}</Button><Button loading={saving} onClick={save}>{tr("Salvar", "Save")}</Button></>}>
+      <div className="space-y-4">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {tr("Escolha quais das suas caixinhas guardam dinheiro para esta meta. O saldo delas soma com o de quem mais participa.", "Choose which of your investments save money for this goal. Their balance is added to the other participants'.")}
+        </p>
+        {options.length ? (
+          <MultiSelect label={ids.length ? tr("Minhas caixinhas", "My investments") : tr("Escolher caixinhas", "Choose investments")} options={options} value={ids} onChange={setIds} />
+        ) : (
+          <p className="text-sm text-slate-400">{tr("Você não tem caixinhas livres. Cadastre uma em Investimentos.", "You have no free investments. Add one in Investments.")}</p>
+        )}
+        <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          <p className="flex justify-between"><span>{tr("Minhas caixinhas", "My investments")}</span><strong className="tabular">{money(mine)}</strong></p>
+          <p className="flex justify-between"><span>{tr("De quem participa", "From other participants")}</span><strong className="tabular">{money(others)}</strong></p>
+          <p className="flex justify-between border-t border-slate-200 pt-1 dark:border-slate-700"><span>{tr("Total guardado", "Total saved")}</span><strong className="tabular">{money(mine + others)} {tr("de", "of")} {money(goal.target_amount)}</strong></p>
+        </div>
+      </div>
     </Modal>
   );
 }

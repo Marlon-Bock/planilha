@@ -61,6 +61,7 @@ Route::middleware(['auth:sanctum', 'active', 'view-as'])->group(function () {
 
     Route::post('goals/{goal}/contribute', [GoalController::class, 'contribute']);
     Route::post('goals/{goal}/toggle', [GoalController::class, 'toggle']);
+    Route::put('goals/{goal}/investments', [GoalController::class, 'linkMine']);
     Route::apiResource('goals', GoalController::class)->except('show');
 
     Route::get('investment-movements', [InvestmentController::class, 'allMovements']);

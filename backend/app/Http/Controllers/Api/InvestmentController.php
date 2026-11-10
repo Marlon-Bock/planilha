@@ -199,7 +199,7 @@ class InvestmentController extends Controller
             'maturity_date' => ['nullable', 'date'],
             'color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'is_active' => ['boolean'],
-            'goal_id' => ['nullable', Rule::exists('goals', 'id')->where('user_id', $request->user()->id)],
+            'goal_id' => ['nullable', 'integer', fn (string $attribute, mixed $value, \Closure $fail) => Goal::whereKey($value)->where('kind', Goal::KIND_MONEY)->exists() || $fail(__('validation.exists', ['attribute' => 'meta']))],
             'notes' => ['nullable', 'string', 'max:2000'],
         ], ['rate.required' => __('Informe a taxa (ex.: 100 para 100% do CDI).')]);
 

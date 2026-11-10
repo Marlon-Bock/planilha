@@ -70,6 +70,12 @@ class Goal extends Model
         return $this->hasMany(Investment::class);
     }
 
+    /** Caixinhas de todos os participantes (sem o filtro "só as minhas"). */
+    public function allInvestments(): HasMany
+    {
+        return $this->investments()->withoutGlobalScopes();
+    }
+
     public function contributions(): HasMany
     {
         return $this->hasMany(GoalContribution::class)->latest('date')->latest('id');
