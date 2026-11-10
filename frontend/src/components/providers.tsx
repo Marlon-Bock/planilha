@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/auth";
 import { PwaProvider } from "@/components/pwa";
 import { CuteSync } from "@/components/cute";
 import { applyLang, useStoredLang } from "@/lib/i18n";
+import { useViewing } from "@/lib/view-as";
 
 let browserQueryClient: QueryClient | undefined;
 
@@ -28,9 +29,11 @@ function getQueryClient() {
 /** Idioma: ao trocar, remonta as telas para todos os textos virem no idioma novo. */
 function LangRoot({ children }: { children: ReactNode }) {
   const lang = useStoredLang();
+  // Trocar de quem estou vendo as finanças também remonta as telas (os dados são outros).
+  const viewing = useViewing();
   applyLang(lang);
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
-  return <Fragment key={lang}>{children}</Fragment>;
+  return <Fragment key={`${lang}:${viewing?.id ?? "me"}`}>{children}</Fragment>;
 }
 
 export function Providers({ children }: { children: ReactNode }) {

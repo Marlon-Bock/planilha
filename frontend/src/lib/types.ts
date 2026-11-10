@@ -120,9 +120,18 @@ export interface Budget {
   percent: number;
 }
 
+/** Pessoa do sistema (só o necessário para mostrar o nome). */
+export interface Person { id: number; name: string }
+
 export interface Goal {
   id: number;
   name: string;
+  /** money = juntar dinheiro; task = meta de fazer algo (sem valor). */
+  kind: "money" | "task";
+  /** Falso quando a meta é de outra pessoa e eu só participo (vejo, mas não altero). */
+  is_owner: boolean;
+  user?: Person;
+  members?: Person[];
   target_amount: number;
   current_amount: number;
   deadline: string | null;

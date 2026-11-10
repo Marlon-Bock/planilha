@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\RecurringTransactionController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\PetController;
 use App\Http\Controllers\Api\PhotoController;
+use App\Http\Controllers\Api\SharingController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -22,12 +23,14 @@ Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
-Route::middleware(['auth:sanctum', 'active'])->group(function () {
+Route::middleware(['auth:sanctum', 'active', 'view-as'])->group(function () {
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::put('profile', [AuthController::class, 'updateProfile']);
     Route::put('profile/password', [AuthController::class, 'updatePassword']);
     Route::delete('profile', [AuthController::class, 'destroyAccount']);
+    Route::get('sharing', [SharingController::class, 'index']);
+    Route::put('sharing', [SharingController::class, 'update']);
     Route::put('profile/pet', [PetController::class, 'update']);
     Route::post('profile/pet/feed', [PetController::class, 'feed']);
     Route::post('profile/pet/love', [PetController::class, 'love']);
@@ -57,6 +60,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::apiResource('budgets', BudgetController::class)->except('show');
 
     Route::post('goals/{goal}/contribute', [GoalController::class, 'contribute']);
+    Route::post('goals/{goal}/toggle', [GoalController::class, 'toggle']);
     Route::apiResource('goals', GoalController::class)->except('show');
 
     Route::get('investment-movements', [InvestmentController::class, 'allMovements']);

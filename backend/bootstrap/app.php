@@ -3,10 +3,12 @@
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\ViewAs;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,9 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToGroup('api', SetLocale::class);
         // A tela de login vive no frontend; requisições /api/* recebem 401 em JSON.
         $middleware->redirectGuestsTo(fn () => rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/').'/login');
+        // "Ver como" troca o usuário antes de o Laravel buscar os registros da URL (ex.: /investments/5),
+        // senão a busca seria feita com o usuário errado.
+        $middleware->prependToPriorityList(SubstituteBindings::class, ViewAs::class);
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'admin' => EnsureUserIsAdmin::class,
+            'view-as' => ViewAs::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

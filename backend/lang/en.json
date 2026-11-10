@@ -20,5 +20,10 @@
     "Não foi possível salvar a foto.": "Couldn't save the photo.",
     "Escolha a conta de destino da transferência.": "Choose the destination account for the transfer.",
     "A conta de destino deve ser diferente da conta de origem.": "The destination account must be different from the source account.",
-    "Acesso restrito a administradores.": "Admins only."
+    "Acesso restrito a administradores.": "Admins only.",
+    "Só metas de fazer algo podem ser marcadas como feitas.": "Only to-do goals can be marked as done.",
+    "Esta meta não tem valor para depositar.": "This goal has no amount to deposit.",
+    "Só quem criou a meta pode alterá-la.": "Only the person who created the goal can change it.",
+    "Você está só visualizando: não dá para alterar os dados de outra pessoa.": "You're only viewing: you can't change someone else's data.",
+    "Você não tem permissão para ver as finanças desta pessoa.": "You don't have permission to see this person's finances."
 }

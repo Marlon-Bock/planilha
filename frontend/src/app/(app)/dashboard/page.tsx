@@ -190,10 +190,14 @@ export default function DashboardPage() {
                 <li key={g.id}>
                   <div className="mb-1.5 flex justify-between text-sm">
                     <span className="flex items-center gap-2 text-slate-700 dark:text-slate-200"><Target className="h-4 w-4" style={{ color: g.color }} />{g.name}</span>
-                    <span className="text-xs font-medium text-slate-500">{percent(g.progress, 0)}</span>
+                    <span className="text-xs font-medium text-slate-500">{g.kind === "task" ? tr("A fazer", "To do") : percent(g.progress, 0)}</span>
                   </div>
-                  <Progress value={g.progress} color={g.color} heart />
-                  <p className="mt-1 text-xs text-slate-500">{money(g.current_amount)} {tr("de", "of")} {money(g.target_amount)}</p>
+                  {g.kind !== "task" && (
+                    <>
+                      <Progress value={g.progress} color={g.color} heart />
+                      <p className="mt-1 text-xs text-slate-500">{money(g.current_amount)} {tr("de", "of")} {money(g.target_amount)}</p>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

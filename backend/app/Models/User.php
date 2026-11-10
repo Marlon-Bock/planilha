@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -72,6 +73,18 @@ class User extends Authenticatable
     public function getBackgroundUrlAttribute(): ?string
     {
         return $this->photoUrl('background', $this->background_path);
+    }
+
+    /** Quem eu deixei ver as minhas finanças (somente visualização). */
+    public function viewers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_viewers', 'owner_id', 'viewer_id')->withTimestamps();
+    }
+
+    /** De quem eu posso ver as finanças. */
+    public function viewables(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'user_viewers', 'viewer_id', 'owner_id')->withTimestamps();
     }
 
     public function isAdmin(): bool

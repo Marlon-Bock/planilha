@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CircleCheck, Link2, Minus, Pencil, Plus, Target, Trash2 } from "lucide-react";
+import { Check, CircleCheck, Link2, ListChecks, Minus, Pencil, PiggyBank, Plus, Target, Trash2, Undo2, Users } from "lucide-react";
 import { api, parseError, type FieldErrors } from "@/lib/api";
 import { cn, fmtDate, money, parseAmount, percent, today } from "@/lib/format";
 import { useInvalidateFinance } from "@/lib/queries";
@@ -12,6 +12,7 @@ import { burstFrom, heartRain } from "@/components/cute";
 import { Badge, Button, Carousel, ColorPicker, ConfirmDialog, cuteHover, DatePicker, EmptyState, Field, Input, Modal, MoneyInput, MultiSelect, PageHeader, Progress, Skeleton, Textarea } from "@/components/ui";
 import { MovementForm, type MovementState } from "@/components/investment-movement-form";
 import { tr } from "@/lib/i18n";
+import { useSharing } from "@/components/sharing";
 
 export default function GoalsPage() {
   const { data, isLoading } = useQuery({
@@ -38,6 +39,18 @@ export default function GoalsPage() {
     setInvesting({ state: { inv: options.length === 1 ? options[0] : null, kind }, options });
   };
 
+  const toggleDone = async (g: Goal, e: React.MouseEvent) => {
+    const button = e.currentTarget;
+    try {
+      const { data } = await api.post<{ data: Goal }>(`/goals/${g.id}/toggle`);
+      if (data.data.completed_at) {
+        burstFrom(button, 16);
+        toast.success(tr(`"${g.name}" feita! 🎉`, `"${g.name}" done! 🎉`));
+      }
+      invalidate();
+    } catch (err) { toast.error(parseError(err).message); }
+  };
+
   const remove = async () => {
     await api.delete(`/goals/${toDelete!.id}`);
     toast.success(tr("Meta excluída", "Goal deleted"));
@@ -47,7 +60,7 @@ export default function GoalsPage() {
 
   return (
     <>
-      <PageHeader title={tr("Metas", "Goals")} description={tr("Junte dinheiro para seus objetivos", "Save money for your goals")}
+      <PageHeader title={tr("Metas", "Goals")} description={tr("Junte dinheiro, combine coisas para fazer e compartilhe metas a dois", "Save money, plan things to do and share goals as a couple")}
         actions={<Button onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="h-4 w-4" /> {tr("Nova meta", "New goal")}</Button>} />
 
       {data && data.data.length > 0 && (
@@ -59,20 +72,32 @@ export default function GoalsPage() {
       )}
 
       {isLoading ? <Skeleton className="h-64" /> : !data?.data.length ? (
-        <EmptyState icon={<Target className="h-6 w-6" />} title={tr("Nenhuma meta ainda", "No goals yet")} description={tr("Reserva de emergência, viagem, carro novo... crie uma meta e acompanhe o progresso.", "Emergency fund, trip, new car... create a goal and track your progress.")}
+        <EmptyState icon={<Target className="h-6 w-6" />} title={tr("Nenhuma meta ainda", "No goals yet")} description={tr("Reserva de emergência, viagem, carro novo... ou algo para fazer juntos. Crie uma meta e acompanhe.", "Emergency fund, trip, new car... or something to do together. Create a goal and track it.")}
           action={<Button onClick={() => setFormOpen(true)}>{tr("Criar meta", "Create goal")}</Button>} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {data.data.map((g) => (
             <div key={g.id} className={cn("group flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900", cuteHover)}>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: `${g.color}1f`, color: g.color }}><Target className="h-5 w-5 cute:group-hover:animate-wiggle" /></span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: `${g.color}1f`, color: g.color }}>{g.kind === "task" ? <ListChecks className="h-5 w-5 cute:group-hover:animate-wiggle" /> : <Target className="h-5 w-5 cute:group-hover:animate-wiggle" />}</span>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900 dark:text-white">{g.name}</p>
                   <p className="text-xs text-slate-500">{g.deadline ? tr(`Prazo: ${fmtDate(g.deadline)}`, `Deadline: ${fmtDate(g.deadline)}`) : tr("Sem prazo", "No deadline")}</p>
                 </div>
-                {g.completed_at && <Badge tone="green"><CircleCheck className="h-3 w-3" />{tr("Concluída", "Completed")}</Badge>}
+                {g.completed_at && <Badge tone="green"><CircleCheck className="h-3 w-3" />{g.kind === "task" ? tr("Feita", "Done") : tr("Concluída", "Completed")}</Badge>}
               </div>
+              {(!g.is_owner || !!g.members?.length) && (
+                <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-brand-700 dark:text-brand-300">
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">
+                    {g.is_owner
+                      ? tr(`Com ${g.members!.map((m) => m.name).join(", ")}`, `With ${g.members!.map((m) => m.name).join(", ")}`)
+                      : tr(`Meta de ${g.user?.name ?? "outra pessoa"}, com você`, `${g.user?.name ?? "Someone"}'s goal, with you`)}
+                  </span>
+                </p>
+              )}
+              {g.kind !== "task" && (
+              <>
               <div className="mt-4 flex items-end justify-between">
                 <p className="tabular text-xl font-bold text-slate-900 dark:text-white">{money(g.current_amount)}</p>
                 <p className="text-sm text-slate-500">{tr("de", "of")} {money(g.target_amount)}</p>
@@ -82,6 +107,8 @@ export default function GoalsPage() {
                 <span>{percent(g.progress, 0)}</span>
                 {g.monthly_needed && <span>{tr(`Guarde ${money(g.monthly_needed)}/mês`, `Save ${money(g.monthly_needed)}/month`)}</span>}
               </div>
+              </>
+              )}
               {!!g.linked_investments?.length && (
                 <div className="mt-3 rounded-xl bg-violet-50/70 p-2.5 dark:bg-violet-500/10">
                   <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-violet-700 dark:text-violet-300">
@@ -101,8 +128,14 @@ export default function GoalsPage() {
                 </div>
               )}
               {g.notes && <p className="mt-3 text-xs text-slate-500">{g.notes}</p>}
-              <div className="mt-auto flex gap-2 pt-4">
-                {g.linked_investments?.length ? (
+              <div className="mt-auto flex items-center gap-2 pt-4">
+                {g.kind === "task" ? (
+                  <Button size="sm" className="flex-1" variant={g.completed_at ? "outline" : "primary"} onClick={(e) => toggleDone(g, e)}>
+                    {g.completed_at ? <><Undo2 className="h-4 w-4" /> {tr("Desfazer", "Undo")}</> : <><Check className="h-4 w-4" /> {tr("Marcar como feita", "Mark as done")}</>}
+                  </Button>
+                ) : !g.is_owner ? (
+                  <p className="flex-1 text-xs text-slate-400">{tr(`Só ${g.user?.name ?? "quem criou"} movimenta esta meta`, `Only ${g.user?.name ?? "the owner"} can move money in this goal`)}</p>
+                ) : g.linked_investments?.length ? (
                   <>
                     <Button size="sm" className="flex-1" onClick={() => openInvest(g, "deposit")}><Plus className="h-4 w-4" /> {tr("Aplicar na caixinha", "Deposit to investment")}</Button>
                     <Button size="sm" variant="outline" onClick={() => openInvest(g, "withdraw")} title={tr("Resgatar da caixinha", "Withdraw from investment")}><Minus className="h-4 w-4" /></Button>
@@ -113,8 +146,12 @@ export default function GoalsPage() {
                     <Button size="sm" variant="outline" onClick={() => setMoving({ goal: g, withdraw: true })} title={tr("Retirar", "Withdraw")}><Minus className="h-4 w-4" /></Button>
                   </>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => { setEditing(g); setFormOpen(true); }} title={tr("Editar", "Edit")}><Pencil className="h-4 w-4" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => setToDelete(g)} title={tr("Excluir", "Delete")}><Trash2 className="h-4 w-4" /></Button>
+                {g.is_owner && (
+                  <>
+                    <Button size="sm" variant="ghost" onClick={() => { setEditing(g); setFormOpen(true); }} title={tr("Editar", "Edit")}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => setToDelete(g)} title={tr("Excluir", "Delete")}><Trash2 className="h-4 w-4" /></Button>
+                  </>
+                )}
               </div>
               {!!g.contributions?.length && (
                 <details className="mt-3 text-xs text-slate-500">
@@ -161,13 +198,17 @@ function GoalForm(props: GoalFormProps) {
 function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
   const [form, setForm] = useState(() => goal ? {
     name: goal.name, target_amount: String(goal.target_amount).replace(".", ","), current_amount: String(goal.current_amount).replace(".", ","),
-    deadline: goal.deadline ?? "", color: goal.color, notes: goal.notes ?? "",
-  } : { name: "", target_amount: "", current_amount: "", deadline: "", color: "#10b981", notes: "" });
+    deadline: goal.deadline ?? "", color: goal.color, notes: goal.notes ?? "", kind: goal.kind,
+  } : { name: "", target_amount: "", current_amount: "", deadline: "", color: "#10b981", notes: "", kind: "money" as Goal["kind"] });
+  const [memberIds, setMemberIds] = useState<number[]>(() => goal?.members?.map((m) => m.id) ?? []);
+  const { data: sharing } = useSharing();
+  const people = sharing?.users ?? [];
+  const task = form.kind === "task";
   const [investmentIds, setInvestmentIds] = useState<number[]>(() => goal?.linked_investments?.map((i) => i.id) ?? []);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
   const invalidate = useInvalidateFinance();
-  const linked = investmentIds.length > 0;
+  const linked = !task && investmentIds.length > 0;
   // Caixinhas livres ou já desta meta (uma caixinha guarda para uma meta só).
   const options = investments
     .filter((i) => !i.goal_id || i.goal_id === goal?.id)
@@ -179,11 +220,12 @@ function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
     setSaving(true);
     const payload = {
       ...form,
-      target_amount: parseAmount(form.target_amount),
-      current_amount: linked ? undefined : form.current_amount ? parseAmount(form.current_amount) : 0,
+      target_amount: task ? null : parseAmount(form.target_amount),
+      current_amount: task || linked ? undefined : form.current_amount ? parseAmount(form.current_amount) : 0,
       deadline: form.deadline || null,
       notes: form.notes || null,
-      investment_ids: investmentIds,
+      investment_ids: task ? [] : investmentIds,
+      member_ids: memberIds,
     };
     try {
       if (goal) await api.put(`/goals/${goal.id}`, payload);
@@ -202,7 +244,23 @@ function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
     <Modal open onClose={onClose} title={goal ? tr("Editar meta", "Edit goal") : tr("Nova meta", "New goal")}
       footer={<><Button variant="ghost" onClick={onClose}>{tr("Cancelar", "Cancel")}</Button><Button type="submit" form="goal-form" loading={saving}>{tr("Salvar", "Save")}</Button></>}>
       <form id="goal-form" onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <Field label={tr("Nome", "Name")} error={errors.name} className="sm:col-span-2"><Input autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={tr("Ex.: Reserva de emergência", "E.g. Emergency fund")} /></Field>
+        {!goal && (
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:col-span-2 dark:bg-slate-800">
+            {([["money", tr("Juntar dinheiro", "Save money"), PiggyBank], ["task", tr("Fazer algo", "Do something"), ListChecks]] as const).map(([k, label, Icon]) => (
+              <button key={k} type="button" onClick={() => setForm({ ...form, kind: k })}
+                className={cn("flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition", form.kind === k ? "bg-brand-600 text-white" : "text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-700")}>
+                <Icon className="h-4 w-4" /> {label}
+              </button>
+            ))}
+          </div>
+        )}
+        <Field label={task ? tr("O que vocês querem fazer?", "What do you want to do?") : tr("Nome", "Name")} error={errors.name} className="sm:col-span-2"
+          hint={task ? tr("Sem valor: quando fizerem, é só marcar como feita.", "No amount: when it's done, just mark it.") : undefined}>
+          <Input autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder={task ? tr("Ex.: Viajar para a praia, fazer academia juntos", "E.g. Go to the beach, work out together") : tr("Ex.: Reserva de emergência", "E.g. Emergency fund")} />
+        </Field>
+        {!task && (
+        <>
         <Field label={tr("Valor objetivo", "Target amount")} error={errors.target_amount}><MoneyInput value={form.target_amount} onChange={(v) => setForm({ ...form, target_amount: v })} /></Field>
         {linked ? (
           <Field label={tr("Já guardado", "Already saved")} hint={tr("Vem do saldo das caixinhas vinculadas", "Comes from the linked investments' balance")}>
@@ -217,6 +275,14 @@ function GoalFormInner({ onClose, goal, investments }: GoalFormProps) {
           hint={options.length ? tr("Opcional. Com caixinhas vinculadas, o progresso acompanha o saldo delas (com rendimento).", "Optional. With linked investments, progress follows their balance (including yield).") : tr("Cadastre caixinhas em Investimentos para vincular aqui.", "Add investments in Investments to link them here.")}>
           <MultiSelect label={linked ? tr("Caixinhas vinculadas", "Linked investments") : tr("Vincular caixinhas (opcional)", "Link investments (optional)")} options={options} value={investmentIds} onChange={setInvestmentIds} />
         </Field>
+        </>
+        )}
+        {people.length > 0 && (
+          <Field label={tr("Meta de casal: quem participa", "Couple goal: who takes part")} group className="sm:col-span-2" error={errors["member_ids.0"]}
+            hint={task ? tr("Quem participa vê a meta e também pode marcar como feita.", "Participants see the goal and can also mark it as done.") : tr("Quem participa vê a meta e o progresso; só você deposita e edita.", "Participants see the goal and its progress; only you deposit and edit.")}>
+            <MultiSelect label={memberIds.length ? tr("Participantes", "Participants") : tr("Só eu (toque para convidar)", "Just me (tap to invite)")} options={people} value={memberIds} onChange={setMemberIds} />
+          </Field>
+        )}
         <Field label={tr("Prazo (opcional)", "Deadline (optional)")} className="sm:col-span-2"><DatePicker clearable placeholder={tr("Sem prazo", "No deadline")} value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} /></Field>
         <Field label={tr("Cor", "Color")} group className="sm:col-span-2"><ColorPicker value={form.color} onChange={(color) => setForm({ ...form, color })} /></Field>
         <Field label={tr("Observações", "Notes")} className="sm:col-span-2"><Textarea placeholder={tr("Opcional: motivação, onde o dinheiro está guardado...", "Optional: motivation, where the money is kept...")} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} /></Field>

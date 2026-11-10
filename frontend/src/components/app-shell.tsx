@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { getLang, setLang, tr } from "@/lib/i18n";
+import { getViewing, useViewing } from "@/lib/view-as";
+import { ViewingBanner, ViewSwitcher } from "@/components/sharing";
 import { cn, fmtDate, isInvestmentTx } from "@/lib/format";
 import { toast } from "sonner";
 import { rememberNext, resolveLink } from "@/lib/navigation";
@@ -67,12 +69,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [loading, user, router, pathname]);
 
+  const viewing = useViewing();
   const openNew = useCallback((d?: TxDefaults) => {
+    if (getViewing()) return void toast.info(tr("Você está só visualizando: aqui não dá para alterar nada.", "You're only viewing: nothing can be changed here."), { id: "read-only" });
     setEditing(null);
     setDefaults(d);
     setFormOpen(true);
   }, []);
   const openEdit = useCallback((t: Transaction) => {
+    if (getViewing()) return void toast.info(tr("Você está só visualizando: aqui não dá para alterar nada.", "You're only viewing: nothing can be changed here."), { id: "read-only" });
     // Aplicações/resgates são controlados pelo investimento.
     if (isInvestmentTx(t.type)) {
       toast.info(t.type === "invest" ? tr("Aplicações são editadas na tela de Investimentos", "Deposits are edited on the Investments screen") : tr("Resgates são editados na tela de Investimentos", "Withdrawals are edited on the Investments screen"));
@@ -153,6 +158,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <div className="flex-1" />
             <InstallButton variant="ghost" className="hidden px-3 lg:inline-flex" />
+            <ViewSwitcher />
             <LangToggle />
             <span className="hidden lg:contents"><ThemeToggle /></span>
             <NotificationBell />
@@ -161,6 +167,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
+        {viewing && <ViewingBanner viewing={viewing} />}
 
         {/* Espaço embaixo para a barra de navegação do celular. */}
         <main className="w-full px-4 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:py-8">

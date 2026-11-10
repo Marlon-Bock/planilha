@@ -1,6 +1,8 @@
 import axios, { AxiosError } from "axios";
 import { rememberNext } from "@/lib/navigation";
 import { getLang, tr } from "@/lib/i18n";
+import { getViewing, isFinanceUrl, setViewing } from "@/lib/view-as";
+import { toast } from "sonner";
 
 export const api = axios.create({
   baseURL: "/api",
@@ -20,8 +22,21 @@ export function ensureCsrf() {
   return csrfReady;
 }
 
+/** Tentou alterar algo enquanto só visualiza as finanças de outra pessoa. */
+export class ReadOnlyError extends Error {}
+const readOnlyMessage = () => tr("Você está só visualizando: aqui não dá para alterar nada.", "You're only viewing: nothing can be changed here.");
+
 api.interceptors.request.use(async (config) => {
   config.headers.set("X-Locale", getLang()); // mensagens do servidor no idioma do app
+  // Vendo as finanças de outra pessoa: as consultas vão com X-View-As; alterações nem saem daqui.
+  const viewing = getViewing();
+  if (viewing && isFinanceUrl(config.url)) {
+    if ((config.method ?? "get").toLowerCase() !== "get") {
+      toast.info(readOnlyMessage(), { id: "read-only" });
+      throw new ReadOnlyError(readOnlyMessage());
+    }
+    config.headers.set("X-View-As", String(viewing.id));
+  }
   if (config.method && config.method.toLowerCase() !== "get") await ensureCsrf();
   return config;
 });
@@ -36,6 +51,11 @@ api.interceptors.response.use(
       csrfReady = null;
       await ensureCsrf();
       return api.request(cfg);
+    }
+    // A pessoa retirou a permissão: volta para as minhas finanças.
+    if (error.response?.status === 403 && (error.response.data as { view_denied?: boolean } | undefined)?.view_denied && getViewing()) {
+      setViewing(null);
+      window.location.reload();
     }
     if (error.response?.status === 401 && typeof window !== "undefined") {
       const path = window.location.pathname;
@@ -54,6 +74,7 @@ export type FieldErrors = Record<string, string>;
 
 /** Extrai a mensagem principal e os erros por campo de uma resposta de erro do Laravel. */
 export function parseError(error: unknown): { message: string; fields: FieldErrors } {
+  if (error instanceof ReadOnlyError) return { message: error.message, fields: {} };
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as { message?: string; errors?: Record<string, string[]> } | undefined;
     const fields: FieldErrors = {};

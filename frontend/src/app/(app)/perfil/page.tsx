@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth";
 import { Badge, Button, Card, ConfirmDialog, DatePicker, Field, Input, PageHeader, Select } from "@/components/ui";
 import { Heart } from "@/components/cute";
 import { MyPetCard } from "@/components/my-pet";
+import { SharingCard } from "@/components/sharing";
 import { PushSettingsCard } from "@/components/push";
 import { PhotosCard } from "@/components/photos";
 import { tr } from "@/lib/i18n";
@@ -123,6 +124,8 @@ export default function ProfilePage() {
         <PushSettingsCard />
 
         <MyPetCard />
+
+        <SharingCard className="lg:col-span-2" />
 
         <Card title={tr("Zona de perigo", "Danger zone")} className="border-rose-200 lg:col-span-2 dark:border-rose-500/30">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
