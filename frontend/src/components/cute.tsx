@@ -112,7 +112,8 @@ function SleepyEyes({ y = 47 }: { y?: number }) {
   );
 }
 
-type Pose = "sit" | "peek" | "sleep";
+/** "walk": de perfil, andando (só o cachorrinho tem). */
+type Pose = "sit" | "peek" | "sleep" | "walk";
 
 /* ================================== Gatinhos ================================== */
 
@@ -195,11 +196,65 @@ export const DOG_COLORS = {
 
 export type DogColor = keyof typeof DOG_COLORS;
 
+/**
+ * Cachorrinho de perfil, andando (olhando para a esquerda; `flip` vira para a direita).
+ * As patinhas alternam o passo; as do lado de lá são mais escuras, para dar profundidade.
+ */
+function DogWalking({ c, collar, className, flip }: { c: (typeof DOG_COLORS)[DogColor]; collar: string | null; className?: string; flip?: boolean }) {
+  const leg = (x: number, cls: string, far?: boolean) => (
+    <rect className={cls} x={x - 5} y="84" width="10" height="22" rx="5" fill={far ? c.dark : c.body} stroke={c.dark} strokeWidth="1.5" />
+  );
+  return (
+    <svg viewBox="0 0 120 110" className={cn("overflow-visible", className)} aria-hidden>
+      <g transform={flip ? "translate(120 0) scale(-1 1)" : undefined}>
+        {/* Patinhas do lado de lá */}
+        {leg(52, "dog-leg-b", true)}
+        {leg(88, "dog-leg-a", true)}
+        <path className="dog-tail" d="M98 72 C110 68 114 56 109 46" fill="none" stroke={c.dark} strokeWidth="8" strokeLinecap="round" />
+        {/* Corpo */}
+        <ellipse cx="70" cy="76" rx="32" ry="17" fill={c.body} stroke={c.dark} strokeWidth="1.5" />
+        <ellipse cx="68" cy="84" rx="20" ry="7" fill={c.muzzle} opacity=".8" />
+        {c.spot && <ellipse cx="82" cy="68" rx="10" ry="7" fill={c.spot} />}
+        {/* Patinhas do lado de cá */}
+        {leg(46, "dog-leg-a")}
+        {leg(82, "dog-leg-b")}
+        {/* Cabeça de perfil */}
+        <g className="dog-head-bob">
+          <ellipse cx="38" cy="46" rx="24" ry="22" fill={c.body} stroke={c.dark} strokeWidth="1.5" />
+          {/* Focinho apontando para a frente */}
+          <ellipse cx="19" cy="55" rx="13" ry="9.5" fill={c.muzzle} stroke={c.dark} strokeWidth="1" />
+          <ellipse cx="8.5" cy="50.5" rx="4.6" ry="3.6" fill={INK} />
+          <ellipse cx="7.4" cy="49.6" rx="1.3" ry=".8" fill="#fff" opacity=".7" />
+          <path d="M10 58 q5 4.5 11 2" fill="none" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
+          <path className="dog-tongue" d="M13 60.4 q3 8 6.4 1.2 z" fill="#fb7185" />
+          {/* Olho (um só, de perfil) */}
+          <g className="eyes-open">
+            <ellipse className="cat-eye" cx="30" cy="42" rx="3.6" ry="4.4" fill={INK} />
+            <circle cx="28.8" cy="40.4" r="1.3" fill="#fff" />
+          </g>
+          <path className="eyes-happy" d="M26 43 q4 -5 8 0" fill="none" stroke={INK} strokeWidth="2.4" strokeLinecap="round" />
+          <ellipse cx="33" cy="54" rx="5" ry="3" fill="#f472b6" opacity=".4" />
+          {/* Orelha caída do lado de cá */}
+          <path className="dog-ear-r" d="M44 26 C60 24 66 46 59 59 C54 67 44 58 42 43 Z" fill={c.ear} />
+        </g>
+        {/* Coleira com plaquinha */}
+        {collar && (
+          <>
+            <path d="M46 64 Q54 70 60 62" fill="none" stroke={collar} strokeWidth="4.5" strokeLinecap="round" />
+            <circle cx="52" cy="70.5" r="3.4" fill="#fbbf24" stroke="#d97706" strokeWidth="1" />
+          </>
+        )}
+      </g>
+    </svg>
+  );
+}
+
 /** Cachorrinho em SVG, com as mesmas poses do gatinho. Orelhinhas caídas, linguinha e coleira com plaquinha. */
 export function Dog({ color = "caramel", pose = "sit", className, flip, collar = "#ec4899" }: { color?: DogColor; pose?: Pose; className?: string; flip?: boolean; collar?: string | null }) {
   const c = DOG_COLORS[color];
   const sleeping = pose === "sleep";
   const viewBox = pose === "peek" ? "0 0 120 78" : "0 0 120 110";
+  if (pose === "walk") return <DogWalking c={c} collar={collar} className={className} flip={flip} />;
 
   return (
     <svg viewBox={viewBox} className={cn("overflow-visible", className)} aria-hidden>

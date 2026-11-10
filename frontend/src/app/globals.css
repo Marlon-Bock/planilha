@@ -238,14 +238,40 @@ body {
 
 /* Andando pela tela: pulinhos curtos, tipo trotando. */
 @keyframes pet-walk {
-  0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(-6px) rotate(4deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 .pet-walk {
   transform-origin: 50% 100%;
-  animation: pet-walk 0.34s ease-in-out infinite;
+  animation: pet-walk 0.21s ease-in-out infinite;
 }
 .pet-walk .dog-tail { animation-duration: 0.2s; }
+
+/* Passinhos: as patinhas alternam (a e b em sentidos opostos). */
+@keyframes leg-step-a {
+  0%, 100% { transform: rotate(26deg); }
+  50% { transform: rotate(-26deg); }
+}
+@keyframes leg-step-b {
+  0%, 100% { transform: rotate(-26deg); }
+  50% { transform: rotate(26deg); }
+}
+.dog-leg-a, .dog-leg-b {
+  transform-box: fill-box;
+  transform-origin: 50% 12%;
+}
+.dog-leg-a { animation: leg-step-a 0.42s ease-in-out infinite; }
+.dog-leg-b { animation: leg-step-b 0.42s ease-in-out infinite; }
+/* A cabeça balança de leve com o passo. */
+@keyframes head-bob {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(1.5px) rotate(-3deg); }
+}
+.dog-head-bob {
+  transform-box: fill-box;
+  transform-origin: 80% 80%;
+  animation: head-bob 0.42s ease-in-out infinite;
+}
 
 /* Balão de fala. */
 @keyframes bubble {

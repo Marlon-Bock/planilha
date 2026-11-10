@@ -279,7 +279,7 @@ export function PetBuddy() {
         {!drag && <span className="absolute -bottom-0.5 left-1/2 h-2 w-10 -translate-x-1/2 rounded-full bg-slate-900/10 blur-[2px] dark:bg-black/30" />}
         {armed && <span className="pointer-events-none absolute -inset-1.5 animate-ping rounded-full border-2 border-brand-400/70" />}
         <span key={boing} className={cn("block h-full w-full", drag ? "pet-dragging" : walkMs ? "pet-walk" : boing > 0 && "pet-boing")}>
-          <CritterArt critter={{ kind: "dog", color: pet.color, collar: pet.collar }} pose={sleeping && !drag && !walkMs ? "sleep" : "sit"} flip={faceRight} className="h-full w-full drop-shadow-sm" />
+          <CritterArt critter={{ kind: "dog", color: pet.color, collar: pet.collar }} pose={walkMs && !drag ? "walk" : sleeping && !drag ? "sleep" : "sit"} flip={faceRight} className="h-full w-full drop-shadow-sm" />
         </span>
         {sleeping && !drag && !walkMs && (
           <span className="pointer-events-none absolute -top-2 right-1 text-sm font-bold text-brand-400 animate-bob">z<span className="text-xs">z</span></span>
